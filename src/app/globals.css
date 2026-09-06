@@ -1,0 +1,56 @@
+@import "tailwindcss";
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-border: var(--border);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-error: var(--error);
+  --color-error-foreground: var(--error-foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+}
+
+:root {
+  --background: #ffffff;
+  --foreground: #09090b; /* Very dark slate, better contrast than pure black */
+
+  --muted: #f4f4f5; /* Zinc 100 */
+  --muted-foreground: #71717a; /* Zinc 500 */
+
+  --border: #e4e4e7; /* Zinc 200 */
+
+  --primary: #000000; /* Pure black for primary actions, highly professional */
+  --primary-foreground: #ffffff;
+
+  --secondary: #f4f4f5; /* Zinc 100 */
+  --secondary-foreground: #18181b; /* Zinc 900 */
+
+  --error: #ef4444; /* Red 500 */
+  --error-foreground: #ffffff;
+
+  --card: #ffffff;
+  --card-foreground: #09090b;
+}
+
+/* Base global styles */
+body {
+  background-color: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Ensure accessible focus states globally */
+*:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
