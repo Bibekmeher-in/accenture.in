@@ -37,7 +37,15 @@ export const metadata: Metadata = {
   robots: {
     index: true,
     follow: true,
-  }
+  },
+  icons: {
+    icon: [
+      { url: "/logo.png" },
+      { url: "/icon.png" },
+    ],
+    shortcut: "/logo.png",
+    apple: "/logo.png",
+  },
 };
 
 import { PublicLayoutWrapper } from "@/components/layout/PublicLayoutWrapper";
