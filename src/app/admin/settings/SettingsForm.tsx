@@ -16,7 +16,7 @@ export function SettingsForm({ isSuperAdmin }: SettingsFormProps) {
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [settings, setSettings] = React.useState<Record<string, Record<string, any>>>({
-    general: { siteName: "Accenture.in", description: "Professional IT Services" },
+    general: { siteName: "TEKNIXX", description: "Professional IT Services" },
     contact: { email: "", phone: "", address: "" },
   })
 

@@ -3,7 +3,7 @@ import clientPromise from "@/lib/mongodb"
 import { Users, FileText, FolderGit2, LayoutTemplate, Clock, Target, CheckCircle2, XCircle, CalendarClock } from "lucide-react"
 
 export const metadata: Metadata = {
-  title: "Admin Dashboard | Accenture.in",
+  title: "Admin Dashboard | TEKNIXX",
 }
 
 export default async function AdminDashboardPage() {

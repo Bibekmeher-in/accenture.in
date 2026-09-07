@@ -111,7 +111,7 @@ export default function ClientLayout({ children, role }: { children: React.React
       >
         <div className="h-full flex flex-col">
           <div className="h-16 flex items-center justify-between px-6 border-b border-border">
-            <span className="text-xl font-bold tracking-tight">Accenture.in</span>
+            <span className="text-xl font-bold tracking-tight">TEKNIXX</span>
             <button
               className="md:hidden p-2 -mr-2 text-muted-foreground hover:text-foreground"
               onClick={() => setSidebarOpen(false)}

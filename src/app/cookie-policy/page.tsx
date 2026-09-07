@@ -4,8 +4,8 @@ import { Section } from "@/components/ui/Section"
 import { SectionHeading } from "@/components/ui/SectionHeading"
 
 export const metadata: Metadata = {
-  title: "Cookie Policy | Accenture.in",
-  description: "Cookie policy and tracking information for Accenture.in.",
+  title: "Cookie Policy | TEKNIXX",
+  description: "Cookie policy and tracking information for TEKNIXX.",
 }
 
 export default function CookiePolicyPage() {

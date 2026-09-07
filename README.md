@@ -1,10 +1,10 @@
-# Accenture.in
+# TEKNIXX
 
 A professional corporate website and admin portal built with Next.js and React.
 
 ## Overview
 
-Accenture.in is a full-stack digital solution featuring a modern, responsive public-facing website and a secure, role-based administrative dashboard for content and lead management.
+TEKNIXX is a full-stack digital solution featuring a modern, responsive public-facing website and a secure, role-based administrative dashboard for content and lead management.
 
 ## Features
 
@@ -149,6 +149,11 @@ When deploying to production, consider the following:
 ## Project Status
 
 Deployment candidate after final production environment and security verification.
+
+## Development Team
+
+- **Project Owner / Lead:** Bibekananda Meher
+- **Developer / Technical Contributor:** Lokanath Meher
 
 ## License
 

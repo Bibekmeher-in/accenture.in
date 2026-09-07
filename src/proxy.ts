@@ -2,7 +2,7 @@ import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { verifySession, SESSION_COOKIE_NAME } from "@/lib/auth"
 
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
   const normalizedPath = path.endsWith("/") && path.length > 1 ? path.slice(0, -1) : path
 

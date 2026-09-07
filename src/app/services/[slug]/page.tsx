@@ -16,12 +16,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!service) {
     return {
-      title: "Service Not Found | Accenture.in",
+      title: "Service Not Found | TEKNIXX",
     }
   }
 
   return {
-    title: `${service.title} | Services | Accenture.in`,
+    title: `${service.title} | Services | TEKNIXX`,
     description: service.description,
   }
 }

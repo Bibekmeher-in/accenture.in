@@ -6,7 +6,7 @@ import { CTASection } from "@/components/blocks/CTASection"
 import { getBlogPosts } from "@/data/blog"
 
 export const metadata: Metadata = {
-  title: "Blog & Insights | Accenture.in",
+  title: "Blog & Insights | TEKNIXX",
   description: "Perspectives on software engineering, digital design, and technology architecture.",
 }
 

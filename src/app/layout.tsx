@@ -17,21 +17,21 @@ const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
   title: {
-    default: "Accenture.in | Professional IT Services",
-    template: "%s | Accenture.in",
+    default: "TEKNIXX | Professional IT Services",
+    template: "%s | TEKNIXX",
   },
   description: "We build digital solutions that help businesses grow with modern software architecture and digital strategy.",
   openGraph: {
-    title: "Accenture.in | Professional IT Services",
+    title: "TEKNIXX | Professional IT Services",
     description: "We build digital solutions that help businesses grow with modern software architecture and digital strategy.",
     url: baseUrl,
-    siteName: "Accenture.in",
+    siteName: "TEKNIXX",
     locale: "en_IN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Accenture.in | Professional IT Services",
+    title: "TEKNIXX | Professional IT Services",
     description: "We build digital solutions that help businesses grow.",
   },
   robots: {
@@ -41,6 +41,8 @@ export const metadata: Metadata = {
 };
 
 import { PublicLayoutWrapper } from "@/components/layout/PublicLayoutWrapper";
+import { CartProvider } from "@/components/store/CartProvider";
+import { CartDrawer } from "@/components/store/CartDrawer";
 
 export default async function RootLayout({
   children,
@@ -73,9 +75,12 @@ export default async function RootLayout({
     <html lang="en" className={`${inter.variable} antialiased h-full`} suppressHydrationWarning>
       <body className="min-h-full flex flex-col font-sans" suppressHydrationWarning>
         <AnalyticsProvider>
-          <PublicLayoutWrapper navbar={<Navbar />} footer={<Footer />}>
-            {children}
-          </PublicLayoutWrapper>
+          <CartProvider>
+            <PublicLayoutWrapper navbar={<Navbar />} footer={<Footer />}>
+              {children}
+            </PublicLayoutWrapper>
+            <CartDrawer />
+          </CartProvider>
           <CookieBanner settings={cookieSettings} />
         </AnalyticsProvider>
       </body>

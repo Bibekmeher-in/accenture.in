@@ -4,8 +4,8 @@ import { Section } from "@/components/ui/Section"
 import { SectionHeading } from "@/components/ui/SectionHeading"
 
 export const metadata: Metadata = {
-  title: "Privacy Policy | Accenture.in",
-  description: "Privacy policy and data handling practices for Accenture.in.",
+  title: "Privacy Policy | TEKNIXX",
+  description: "Privacy policy and data handling practices for TEKNIXX.",
 }
 
 export default function PrivacyPolicyPage() {

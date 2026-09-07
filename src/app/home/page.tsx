@@ -12,7 +12,7 @@ import { BlogCard } from "@/components/blocks/BlogCard"
 import { CTASection } from "@/components/blocks/CTASection"
 
 export const metadata: Metadata = {
-  title: "Accenture.in | Professional IT Services & Solutions",
+  title: "TEKNIXX | Professional IT Services & Solutions",
   description: "We help businesses design, build, improve, and maintain modern digital solutions.",
 }
 

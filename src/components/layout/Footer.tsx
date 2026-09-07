@@ -8,7 +8,7 @@ export function Footer() {
       <Container>
         <div className="py-12 md:py-16 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-8">
           <div>
-            <h3 className="font-bold text-lg mb-4 tracking-tight">Accenture.in</h3>
+            <h3 className="font-bold text-lg mb-4 tracking-tight">TEKNIXX</h3>
             <p className="text-muted-foreground text-sm max-w-xs">
               We build digital solutions that help businesses grow.
             </p>
@@ -45,7 +45,7 @@ export function Footer() {
         </div>
 
         <div className="py-6 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4 text-xs text-muted-foreground">
-          <p>© {new Date().getFullYear()} Accenture.in. All rights reserved.</p>
+          <p>© {new Date().getFullYear()} TEKNIXX. All rights reserved.</p>
         </div>
       </Container>
     </footer>

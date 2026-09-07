@@ -6,7 +6,7 @@ import { CTASection } from "@/components/blocks/CTASection"
 import { getProjects } from "@/data/projects"
 
 export const metadata: Metadata = {
-  title: "Portfolio | Accenture.in",
+  title: "Portfolio | TEKNIXX",
   description: "Selected digital work, concept projects, and technical implementations.",
 }
 

@@ -2,7 +2,7 @@ import { Metadata } from "next"
 import ClientLayout from "./ClientLayout"
 
 export const metadata: Metadata = {
-  title: "Admin Portal | Accenture.in",
+  title: "Admin Portal | TEKNIXX",
   robots: {
     index: false,
     follow: false,

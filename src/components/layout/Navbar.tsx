@@ -2,6 +2,7 @@
 
 import * as React from "react"
 import Link from "next/link"
+import Image from "next/image"
 import { usePathname } from "next/navigation"
 import { cn } from "@/lib/utils"
 import { Container } from "@/components/ui/Container"
@@ -35,8 +36,11 @@ export function Navbar() {
       <Container>
         <div className="flex h-16 items-center justify-between">
           <div className="flex gap-6 md:gap-10">
-            <Link href="/home/" className="flex items-center space-x-2">
-              <span className="inline-block font-bold text-xl tracking-tight">Accenture.in</span>
+            <Link href="/home/" className="flex items-center space-x-3 transition-opacity hover:opacity-90">
+              <Image src="/logo.png" alt="TEKNIXX" width={40} height={40} className="object-contain" />
+              <span className="inline-block font-extrabold text-xl tracking-[0.2em] uppercase bg-gradient-to-r from-zinc-900 to-zinc-500 bg-clip-text text-transparent drop-shadow-sm">
+                TEKNIXX
+              </span>
             </Link>
           </div>
 

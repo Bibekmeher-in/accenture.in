@@ -16,7 +16,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading"
 import { CTASection } from "@/components/blocks/CTASection"
 
 export const metadata: Metadata = {
-  title: "About Us | Accenture.in",
+  title: "About Us | TEKNIXX",
   description: "Learn about our approach to building maintainable, scalable, and user-focused digital solutions.",
 }
 
@@ -81,7 +81,7 @@ export default function AboutPage() {
               />
               <div className="space-y-6 text-lg text-muted-foreground leading-relaxed">
                 <p>
-                  At Accenture.in, we focus on understanding your core business requirements and translating them into practical, high-performance digital solutions.
+                  At TEKNIXX, we focus on understanding your core business requirements and translating them into practical, high-performance digital solutions.
                 </p>
                 <p>
                   We believe that the best digital products come from combining thoughtful design with disciplined engineering. By prioritizing usability and reliability over unnecessary complexity, we build systems that are not only effective today but remain maintainable for years to come.

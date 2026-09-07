@@ -47,7 +47,7 @@ export default function AdminLoginPage() {
           Admin Portal
         </h2>
         <p className="mt-2 text-center text-sm text-muted-foreground">
-          Sign in to manage Accenture.in content and leads
+          Sign in to manage TEKNIXX content and leads
         </p>
       </div>
 

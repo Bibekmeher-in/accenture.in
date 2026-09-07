@@ -17,12 +17,12 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
   if (!post) {
     return {
-      title: "Article Not Found | Accenture.in",
+      title: "Article Not Found | TEKNIXX",
     }
   }
 
   return {
-    title: `${post.title} | Blog | Accenture.in`,
+    title: `${post.title} | Blog | TEKNIXX`,
     description: post.excerpt,
   }
 }

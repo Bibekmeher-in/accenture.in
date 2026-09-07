@@ -4,8 +4,8 @@ import { Section } from "@/components/ui/Section"
 import { SectionHeading } from "@/components/ui/SectionHeading"
 
 export const metadata: Metadata = {
-  title: "Terms and Conditions | Accenture.in",
-  description: "Terms and conditions for using Accenture.in services.",
+  title: "Terms and Conditions | TEKNIXX",
+  description: "Terms and conditions for using TEKNIXX services.",
 }
 
 export default function TermsAndConditionsPage() {

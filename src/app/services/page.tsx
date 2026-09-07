@@ -6,7 +6,7 @@ import { CTASection } from "@/components/blocks/CTASection"
 import { services } from "@/data/services"
 
 export const metadata: Metadata = {
-  title: "Services | Accenture.in",
+  title: "Services | TEKNIXX",
   description: "Comprehensive digital services ranging from web development to cloud infrastructure and strategic consulting.",
 }
 
