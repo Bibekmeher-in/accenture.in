@@ -71,7 +71,7 @@ npm install
 ```
 
 Configure environment variables:
-Copy `.env.example` to `.env.local` and update the required values. Never commit `.env.local` containing real secrets.
+Copy `.env.example` to `.env` and update the required values. Never commit `.env` containing real secrets.
 
 Start the development server:
 ```bash
@@ -80,7 +80,7 @@ npm run dev
 
 ## Environment Variables
 
-The application requires the following environment variables to be configured in `.env.local`:
+The application requires the following environment variables to be configured in `.env`:
 - `MONGODB_URI`: Connection string for the MongoDB database
 - `JWT_SECRET`: Secret key for signing authentication tokens
 - `NEXT_PUBLIC_APP_URL`: Base URL of the application

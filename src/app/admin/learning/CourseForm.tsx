@@ -75,7 +75,7 @@ export function CourseForm({ initialData, onSubmit, onCancel, isSubmitting }: Pr
   const [isUploading, setIsUploading] = useState(false)
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({})
 
-  const handleUpload = async (file: File, fileType: "thumbnail" | "resource") => {
+  const handleUpload = async (file: File) => {
     setIsUploading(true)
     try {
       const form = new FormData()
@@ -102,7 +102,7 @@ export function CourseForm({ initialData, onSubmit, onCancel, isSubmitting }: Pr
   const handleThumbnailUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = await handleUpload(file, "thumbnail")
+    const url = await handleUpload(file)
     if (url) {
       setFormData(prev => ({ ...prev, thumbnail: url }))
     }
@@ -202,7 +202,7 @@ export function CourseForm({ initialData, onSubmit, onCancel, isSubmitting }: Pr
   const addResource = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const url = await handleUpload(file, "resource")
+    const url = await handleUpload(file)
     if (url) {
       setFormData({
         ...formData,

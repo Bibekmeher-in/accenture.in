@@ -7,25 +7,44 @@ import Link from "next/link"
 import { formatINR } from "@/lib/currency"
 import { ProductActions } from "./ProductActions"
 
-export async function generateMetadata({ params }: { params: { slug: string } }): Promise<Metadata> {
-  const client = await clientPromise
-  const db = client.db("accenture")
-  const product = await db.collection("products").findOne({ slug: params.slug, status: "Published" })
+interface PageProps {
+  params: Promise<{ slug: string }>
+}
 
-  if (!product) {
-    return { title: "Product Not Found" }
-  }
+export const dynamic = "force-dynamic"
 
-  return {
-    title: product.name,
-    description: product.shortDescription || product.description.substring(0, 160),
+export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
+  try {
+    const { slug } = await params
+    const client = await clientPromise
+    const db = client.db("accenture")
+    const product = await db.collection("products").findOne({ slug, status: "Published" })
+
+    if (!product) {
+      return { title: "Product Not Found" }
+    }
+
+    return {
+      title: product.name,
+      description: product.shortDescription || product.description.substring(0, 160),
+    }
+  } catch {
+    return { title: "Product | TEKNIXX Store" }
   }
 }
 
-export default async function ProductDetailPage({ params }: { params: { slug: string } }) {
-  const client = await clientPromise
-  const db = client.db("accenture")
-  const product = await db.collection("products").findOne({ slug: params.slug, status: "Published" })
+export default async function ProductDetailPage({ params }: PageProps) {
+  const { slug } = await params
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let product: any = null
+
+  try {
+    const client = await clientPromise
+    const db = client.db("accenture")
+    product = await db.collection("products").findOne({ slug, status: "Published" })
+  } catch (error) {
+    console.error("Failed to fetch product:", error)
+  }
 
   if (!product) {
     notFound()

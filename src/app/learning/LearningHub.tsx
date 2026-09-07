@@ -53,23 +53,23 @@ export function LearningHub({ initialCourses }: { initialCourses: any[] }) {
               className="w-full pl-12 pr-4 py-4 bg-card border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 text-lg shadow-sm"
             />
           </div>
-          <div className="flex gap-4">
-            <div className="relative min-w-[200px]">
-              <Filter className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 w-full lg:w-auto">
+            <div className="relative w-full sm:min-w-[180px] lg:min-w-[200px]">
+              <Filter className="w-5 h-5 absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
               <select 
                 value={categoryFilter} 
                 onChange={e => setCategoryFilter(e.target.value)}
-                className="w-full pl-12 pr-4 py-4 bg-card border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none font-medium text-lg shadow-sm"
+                className="w-full pl-12 pr-4 py-3 sm:py-4 bg-card border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none font-medium text-base sm:text-lg shadow-sm"
               >
                 <option value="">All Categories</option>
                 {categories.map(c => <option key={c as string} value={c as string}>{c as string}</option>)}
               </select>
             </div>
-            <div className="relative min-w-[160px]">
+            <div className="relative w-full sm:min-w-[140px] lg:min-w-[160px]">
               <select 
                 value={levelFilter} 
                 onChange={e => setLevelFilter(e.target.value)}
-                className="w-full px-4 py-4 bg-card border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none font-medium text-lg shadow-sm"
+                className="w-full px-4 py-3 sm:py-4 bg-card border border-border rounded-2xl focus:outline-none focus:ring-2 focus:ring-primary/50 appearance-none font-medium text-base sm:text-lg shadow-sm"
               >
                 <option value="">All Levels</option>
                 {levels.map(l => <option key={l as string} value={l as string}>{l as string}</option>)}

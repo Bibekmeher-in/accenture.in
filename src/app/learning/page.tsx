@@ -7,20 +7,29 @@ export const metadata: Metadata = {
   description: "Build practical skills with structured learning resources and courses.",
 }
 
+export const dynamic = "force-dynamic"
+
 export default async function LearningPage() {
-  const client = await clientPromise
-  const db = client.db("accenture")
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let courses: any[] = []
 
-  const coursesRaw = await db
-    .collection("learning")
-    .find({ status: "Published" })
-    .toArray()
+  try {
+    const client = await clientPromise
+    const db = client.db("accenture")
 
-  // Convert ObjectIds to strings to pass to client component
-  const courses = coursesRaw.map(course => ({
-    ...course,
-    _id: course._id.toString()
-  }))
+    const coursesRaw = await db
+      .collection("learning")
+      .find({ status: "Published" })
+      .toArray()
+
+    // Convert ObjectIds to strings to pass to client component
+    courses = coursesRaw.map(course => ({
+      ...course,
+      _id: course._id.toString()
+    }))
+  } catch (error) {
+    console.error("Failed to load courses from database:", error)
+  }
 
   return <LearningHub initialCourses={courses} />
 }

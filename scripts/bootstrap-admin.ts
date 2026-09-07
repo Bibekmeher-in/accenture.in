@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 import { MongoClient } from 'mongodb';
 import bcrypt from 'bcryptjs';
 
-dotenv.config({ path: '.env.local' });
+dotenv.config({ path: '.env' });
 
 async function run() {
   console.log('Starting admin bootstrap/reset...');
@@ -14,13 +14,13 @@ async function run() {
 
   const uri = process.env.MONGODB_URI;
   if (!uri) {
-    console.error('ERROR: MONGODB_URI is not set in .env.local');
+    console.error('ERROR: MONGODB_URI is not set in .env');
     process.exit(1);
   }
 
   const password = process.env.INITIAL_ADMIN_PASSWORD;
   if (!password) {
-    console.error('ERROR: INITIAL_ADMIN_PASSWORD is not set in .env.local');
+    console.error('ERROR: INITIAL_ADMIN_PASSWORD is not set in .env');
     process.exit(1);
   }
 

@@ -10,15 +10,24 @@ export const metadata: Metadata = {
   description: "Browse our professional products and merchandise.",
 }
 
-export default async function StorePage() {
-  const client = await clientPromise
-  const db = client.db("accenture")
+export const dynamic = "force-dynamic"
 
-  const productsRaw = await db
-    .collection("products")
-    .find({ status: "Published" })
-    .sort({ createdAt: -1 })
-    .toArray()
+export default async function StorePage() {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let productsRaw: any[] = []
+
+  try {
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    productsRaw = await db
+      .collection("products")
+      .find({ status: "Published" })
+      .sort({ createdAt: -1 })
+      .toArray()
+  } catch (error) {
+    console.error("Failed to load products from database:", error)
+  }
 
   // Extract unique categories that actually have products
   const categories = Array.from(new Set(productsRaw.map(p => p.category)))

@@ -32,6 +32,7 @@ export async function POST(request: Request) {
     const parseResult = EventSchema.safeParse(body)
 
     if (!parseResult.success) {
+      console.error("Analytics validation failed:", parseResult.error.format())
       // Return 400 without exposing detailed validation errors which could leak info
       return NextResponse.json({ error: "Invalid payload" }, { status: 400 })
     }
@@ -118,8 +119,7 @@ export async function POST(request: Request) {
       },
       $setOnInsert: {
         visitorId: data.visitorId,
-        startedAt: eventDoc.timestamp,
-        pageCount: 0
+        startedAt: eventDoc.timestamp
       },
       $inc: {
         pageCount: data.eventType === "page_view" ? 1 : 0
@@ -134,7 +134,8 @@ export async function POST(request: Request) {
 
     return NextResponse.json({ success: true })
 
-  } catch {
+  } catch (error) {
+    console.error("Analytics event insertion error:", error)
     // Fail safely, do not crash or expose DB errors
     return NextResponse.json({ success: false, error: "Internal error" }, { status: 500 })
   }
