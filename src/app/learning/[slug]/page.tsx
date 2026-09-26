@@ -5,6 +5,7 @@ import clientPromise from "@/lib/mongodb"
 import { Clock, BookOpen, User, CheckCircle2, Target, Users, AlertCircle, FileText, Download } from "lucide-react"
 import Link from "next/link"
 import { CourseCurriculum } from "./CourseCurriculum"
+import { CourseDetailActions } from "./CourseDetailActions"
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -20,15 +21,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const course = await db.collection("learning").findOne({ slug, status: "Published" })
 
     if (!course) {
-      return { title: "Course Not Found" }
+      return { title: "Course Details | TEKNIXX Academy" }
     }
 
     return {
-      title: course.title,
+      title: `${course.title} | TEKNIXX Academy`,
       description: course.description?.substring(0, 160),
     }
   } catch {
-    return { title: "Course | TEKNIXX Learning" }
+    return { title: "Course Details | TEKNIXX Academy" }
   }
 }
 
@@ -42,7 +43,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
     const db = client.db("accenture")
     course = await db.collection("learning").findOne({ slug, status: "Published" })
   } catch (error) {
-    console.error("Failed to fetch course:", error)
+    console.error("Failed to fetch course details:", error)
   }
 
   if (!course) {
@@ -93,9 +94,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
               </div>
 
               <div className="pt-6 flex flex-col sm:flex-row gap-4">
-                <button className="px-8 py-4 bg-primary text-primary-foreground font-bold text-lg rounded-xl hover:bg-primary/90 hover:shadow-lg transition-all text-center">
-                  Start Learning
-                </button>
+                <CourseDetailActions courseSlug={slug} buttonType="hero" />
               </div>
             </div>
 
@@ -176,7 +175,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
             </section>
 
             {/* Curriculum Section */}
-            <section>
+            <section id="course-curriculum-section">
               <div className="flex items-center justify-between mb-8">
                 <h2 className="text-3xl font-bold">Curriculum</h2>
                 <div className="text-sm font-semibold text-muted-foreground bg-muted px-4 py-2 rounded-full">
@@ -195,9 +194,7 @@ export default async function CourseDetailPage({ params }: PageProps) {
               <div className="bg-card border border-border rounded-2xl p-6 shadow-sm">
                 <h3 className="font-bold text-xl mb-4">Ready to begin?</h3>
                 <p className="text-muted-foreground text-sm mb-6">Enroll now to track your progress, access all materials, and earn your certificate.</p>
-                <button className="w-full py-4 bg-foreground text-background font-bold rounded-xl hover:bg-foreground/90 transition-colors">
-                  Start Course Now
-                </button>
+                <CourseDetailActions courseSlug={slug} buttonType="sidebar" />
               </div>
 
               {/* Resources */}

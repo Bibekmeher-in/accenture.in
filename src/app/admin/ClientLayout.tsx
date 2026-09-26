@@ -16,19 +16,25 @@ import {
   LayoutTemplate,
   BookOpen,
   Store,
-  Settings
+  Settings,
+  ShoppingBag,
+  UserCheck,
+  Briefcase
 } from "lucide-react"
 
 const ALL_NAVIGATION = [
   { name: "Dashboard", href: "/admin/dashboard", icon: LayoutDashboard, role: "admin" },
+  { name: "Careers", href: "/admin/careers", icon: Briefcase, role: "admin" },
+  { name: "Customers", href: "/admin/customers", icon: UserCheck, role: "admin" },
+  { name: "Orders", href: "/admin/orders", icon: ShoppingBag, role: "admin" },
+  { name: "Store Catalog", href: "/admin/store", icon: Store, role: "admin" },
   { name: "Leads", href: "/admin/leads", icon: Users, role: "admin" },
   { name: "Services", href: "/admin/services", icon: LayoutTemplate, role: "admin" },
   { name: "Portfolio", href: "/admin/portfolio", icon: FolderGit2, role: "admin" },
   { name: "Blog", href: "/admin/blog", icon: FileText, role: "admin" },
+  { name: "Learning", href: "/admin/learning", icon: BookOpen, role: "admin" },
   { name: "Analytics", href: "/admin/analytics", icon: LineChart, role: "super_admin" },
   { name: "Cookies", href: "/admin/cookies", icon: Cookie, role: "super_admin" },
-  { name: "Learning", href: "/admin/learning", icon: BookOpen, role: "admin" },
-  { name: "Store", href: "/admin/store", icon: Store, role: "admin" },
   { name: "Users", href: "/admin/users", icon: Shield, role: "super_admin" },
   { name: "Audit Logs", href: "/admin/audit-logs", icon: FileText, role: "super_admin" },
   { name: "Settings", href: "/admin/settings", icon: Settings, role: "admin" },

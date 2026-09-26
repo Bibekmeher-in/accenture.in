@@ -1,12 +1,13 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
 import { verifySession, SESSION_COOKIE_NAME } from "@/lib/auth"
+import { verifyCustomerSession, CUSTOMER_SESSION_COOKIE_NAME } from "@/lib/customer-auth"
 
 export async function proxy(request: NextRequest) {
   const path = request.nextUrl.pathname
   const normalizedPath = path.endsWith("/") && path.length > 1 ? path.slice(0, -1) : path
 
-  // Protect all /admin routes except /admin/login
+  // 1. Protect all /admin routes except /admin/login
   if (normalizedPath.startsWith("/admin") && normalizedPath !== "/admin/login") {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
 
@@ -21,7 +22,7 @@ export async function proxy(request: NextRequest) {
     }
   }
 
-  // If trying to access login page while already logged in, redirect to dashboard
+  // If trying to access admin login page while already logged in, redirect to dashboard
   if (normalizedPath === "/admin/login") {
     const sessionCookie = request.cookies.get(SESSION_COOKIE_NAME)?.value
     if (sessionCookie) {
@@ -32,9 +33,26 @@ export async function proxy(request: NextRequest) {
     }
   }
 
+  // 2. Protect /account routes for customers
+  if (normalizedPath.startsWith("/account")) {
+    const customerCookie = request.cookies.get(CUSTOMER_SESSION_COOKIE_NAME)?.value
+    if (!customerCookie) {
+      const loginUrl = new URL("/auth/login/", request.url)
+      loginUrl.searchParams.set("redirect", path)
+      return NextResponse.redirect(loginUrl)
+    }
+
+    const customerPayload = await verifyCustomerSession(customerCookie)
+    if (!customerPayload) {
+      const loginUrl = new URL("/auth/login/", request.url)
+      loginUrl.searchParams.set("redirect", path)
+      return NextResponse.redirect(loginUrl)
+    }
+  }
+
   return NextResponse.next()
 }
 
 export const config = {
-  matcher: ["/admin/:path*"],
+  matcher: ["/admin/:path*", "/account/:path*"],
 }

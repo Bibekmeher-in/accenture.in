@@ -15,6 +15,8 @@ import {
   GraduationCap, 
   Briefcase, 
   FileText, 
+  FolderKanban,
+  User,
   ArrowRight,
   ChevronRight
 } from "lucide-react"
@@ -28,32 +30,37 @@ const navItems = [
   { href: "/services/", label: "Services", icon: Layers, description: "End-to-end technical capabilities" },
   { href: "/store/", label: "Store", icon: ShoppingBag, description: "Products & merchandise" },
   { href: "/learning/", label: "Learning", icon: GraduationCap, description: "Courses & professional skills" },
-  { href: "/portfolio/", label: "Portfolio", icon: Briefcase, description: "Selected client case studies" },
+  { href: "/careers/", label: "Careers", icon: Briefcase, description: "Join our team & explore roles" },
+  { href: "/portfolio/", label: "Portfolio", icon: FolderKanban, description: "Selected client case studies" },
   { href: "/blog/", label: "Blog", icon: FileText, description: "Tech insights & engineering" },
 ]
 
 function isRouteActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  const normalizedPath = pathname.replace(/\/$/, "");
-  const normalizedHref = href.replace(/\/$/, "");
+  if (href === "/") return pathname === "/"
+  const normalizedPath = pathname.replace(/\/$/, "")
+  const normalizedHref = href.replace(/\/$/, "")
 
-  if (normalizedPath === normalizedHref) return true;
-  return normalizedPath.startsWith(`${normalizedHref}/`);
+  if (normalizedPath === normalizedHref) return true
+  return normalizedPath.startsWith(`${normalizedHref}/`)
 }
 
-export function MobileNav() {
+export function MobileNav({
+  customerSession,
+}: {
+  customerSession?: { name: string; email: string } | null
+}) {
   const [isOpen, setIsOpen] = React.useState(false)
   const pathname = usePathname()
   const { totalItems, setIsCartOpen } = useCart()
 
-  // Hydration-safe mounting check without triggering set-state-in-effect
+  // Hydration-safe mounting check
   const mounted = React.useSyncExternalStore(
     () => () => {},
     () => true,
     () => false
   )
 
-  // Auto-close on route change during render (React recommended pattern)
+  // Auto-close on route change
   const [prevPathname, setPrevPathname] = React.useState(pathname)
   if (prevPathname !== pathname) {
     setPrevPathname(pathname)
@@ -134,7 +141,7 @@ export function MobileNav() {
             onClick={() => setIsOpen(false)}
             className="flex items-center space-x-2.5"
           >
-            <Image src="/logo.png" alt="TEKNIXX" width={32} height={32} className="object-contain" />
+            <Image src="/logo.png" alt="TEKNIXX" width={32} height={32} className="object-contain" priority />
             <span className="font-extrabold text-base tracking-[0.18em] uppercase bg-gradient-to-r from-zinc-900 to-zinc-500 bg-clip-text text-transparent">
               TEKNIXX
             </span>
@@ -150,39 +157,69 @@ export function MobileNav() {
         </div>
 
         {/* Scrollable Navigation List */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1 overscroll-contain">
-          {navItems.map((item) => {
-            const Icon = item.icon
-            const active = isRouteActive(pathname, item.href)
-
-            return (
+        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-2 overscroll-contain">
+          {/* Customer Account Bar */}
+          <div className="pb-2">
+            {customerSession ? (
               <Link
-                key={item.href}
-                href={item.href}
+                href="/account/"
                 onClick={() => setIsOpen(false)}
-                className={cn(
-                  "flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-all group",
-                  active
-                    ? "bg-primary text-primary-foreground shadow-sm"
-                    : "text-foreground/80 hover:text-foreground hover:bg-muted"
-                )}
+                className="flex items-center gap-3 p-3 bg-primary/10 text-primary border border-primary/20 rounded-xl font-bold text-sm hover:bg-primary/15 transition-colors"
               >
-                <div className="flex items-center gap-3">
-                  <div className={cn(
-                    "p-1.5 rounded-lg transition-colors",
-                    active ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted text-foreground/70 group-hover:text-primary group-hover:bg-primary/10"
-                  )}>
-                    <Icon className="h-4 w-4" />
-                  </div>
-                  <span>{item.label}</span>
+                <div className="p-1.5 rounded-lg bg-primary text-primary-foreground">
+                  <User className="w-4 h-4" />
                 </div>
-                <ChevronRight className={cn(
-                  "h-4 w-4 transition-transform group-hover:translate-x-0.5",
-                  active ? "text-primary-foreground/70" : "text-muted-foreground/40"
-                )} />
+                <div className="flex flex-col min-w-0">
+                  <span className="text-xs text-primary/70 font-semibold uppercase tracking-wider">Signed in as</span>
+                  <span className="truncate text-foreground font-bold">{customerSession.name || customerSession.email}</span>
+                </div>
               </Link>
-            )
-          })}
+            ) : (
+              <Link
+                href="/auth/login/"
+                onClick={() => setIsOpen(false)}
+                className="flex items-center justify-center gap-2 p-3 bg-muted text-foreground rounded-xl font-bold text-sm hover:bg-muted/80 transition-colors border border-border"
+              >
+                <User className="w-4 h-4 text-primary" />
+                <span>Sign In to Account</span>
+              </Link>
+            )}
+          </div>
+
+          <div className="space-y-1">
+            {navItems.map((item) => {
+              const Icon = item.icon
+              const active = isRouteActive(pathname, item.href)
+
+              return (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  onClick={() => setIsOpen(false)}
+                  className={cn(
+                    "flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium transition-all group",
+                    active
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-foreground/80 hover:text-foreground hover:bg-muted"
+                  )}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={cn(
+                      "p-1.5 rounded-lg transition-colors",
+                      active ? "bg-primary-foreground/15 text-primary-foreground" : "bg-muted text-foreground/70 group-hover:text-primary group-hover:bg-primary/10"
+                    )}>
+                      <Icon className="h-4 w-4" />
+                    </div>
+                    <span>{item.label}</span>
+                  </div>
+                  <ChevronRight className={cn(
+                    "h-4 w-4 transition-transform group-hover:translate-x-0.5",
+                    active ? "text-primary-foreground/70" : "text-muted-foreground/40"
+                  )} />
+                </Link>
+              )
+            })}
+          </div>
 
           {/* Cart Quick Access */}
           <button

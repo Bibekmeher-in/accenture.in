@@ -5,12 +5,12 @@ import clientPromise from "@/lib/mongodb"
 import Link from "next/link"
 import { formatINR } from "@/lib/currency"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: "Store",
   description: "Browse our professional products and merchandise.",
 }
-
-export const dynamic = "force-dynamic"
 
 export default async function StorePage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -26,7 +26,7 @@ export default async function StorePage() {
       .sort({ createdAt: -1 })
       .toArray()
   } catch (error) {
-    console.error("Failed to load products from database:", error)
+    console.error("Failed to load store products:", error)
   }
 
   // Extract unique categories that actually have products

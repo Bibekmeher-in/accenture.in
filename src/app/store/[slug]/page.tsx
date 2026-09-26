@@ -21,15 +21,15 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
     const product = await db.collection("products").findOne({ slug, status: "Published" })
 
     if (!product) {
-      return { title: "Product Not Found" }
+      return { title: "Product Details | TEKNIXX Store" }
     }
 
     return {
-      title: product.name,
-      description: product.shortDescription || product.description.substring(0, 160),
+      title: `${product.name} | TEKNIXX Store`,
+      description: product.shortDescription || product.description?.substring(0, 160),
     }
   } catch {
-    return { title: "Product | TEKNIXX Store" }
+    return { title: "Product Details | TEKNIXX Store" }
   }
 }
 
@@ -43,7 +43,7 @@ export default async function ProductDetailPage({ params }: PageProps) {
     const db = client.db("accenture")
     product = await db.collection("products").findOne({ slug, status: "Published" })
   } catch (error) {
-    console.error("Failed to fetch product:", error)
+    console.error("Failed to fetch product details:", error)
   }
 
   if (!product) {

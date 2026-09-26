@@ -4,7 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { usePathname } from "next/navigation"
-import { ShoppingBag } from "lucide-react"
+import { ShoppingBag, User } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { Container } from "@/components/ui/Container"
 import { Button } from "@/components/ui/Button"
@@ -17,22 +17,39 @@ const navItems = [
   { href: "/services/", label: "Services" },
   { href: "/store/", label: "Store" },
   { href: "/learning/", label: "Learning" },
+  { href: "/careers/", label: "Careers" },
   { href: "/portfolio/", label: "Portfolio" },
   { href: "/blog/", label: "Blog" },
 ]
 
 function isRouteActive(pathname: string, href: string) {
-  if (href === "/") return pathname === "/";
-  const normalizedPath = pathname.replace(/\/$/, "");
-  const normalizedHref = href.replace(/\/$/, "");
+  if (href === "/") return pathname === "/"
+  const normalizedPath = pathname.replace(/\/$/, "")
+  const normalizedHref = href.replace(/\/$/, "")
 
-  if (normalizedPath === normalizedHref) return true;
-  return normalizedPath.startsWith(`${normalizedHref}/`);
+  if (normalizedPath === normalizedHref) return true
+  return normalizedPath.startsWith(`${normalizedHref}/`)
 }
 
 export function Navbar() {
   const pathname = usePathname()
   const { totalItems, setIsCartOpen } = useCart()
+  const [customerSession, setCustomerSession] = React.useState<{ name: string; email: string } | null>(null)
+  const [isSessionLoading, setIsSessionLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    fetch("/api/customer/session")
+      .then((res) => res.json())
+      .then((data) => {
+        if (data.authenticated && data.session) {
+          setCustomerSession(data.session)
+        } else {
+          setCustomerSession(null)
+        }
+      })
+      .catch(() => setCustomerSession(null))
+      .finally(() => setIsSessionLoading(false))
+  }, [pathname])
 
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -82,15 +99,40 @@ export function Navbar() {
               )}
             </button>
 
-            {/* Desktop Contact CTA */}
-            <div className="hidden md:block">
+            {/* Customer Authentication State (Desktop) */}
+            <div className="hidden md:flex items-center gap-2">
+              {!isSessionLoading && (
+                customerSession ? (
+                  <Link
+                    href="/account/"
+                    className={cn(
+                      "flex items-center gap-2 px-3 py-1.5 rounded-xl border text-sm font-semibold transition-colors",
+                      pathname.startsWith("/account")
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-border hover:bg-muted text-foreground"
+                    )}
+                  >
+                    <User className="w-4 h-4 text-primary" />
+                    <span className="max-w-[120px] truncate">{customerSession.name || "Account"}</span>
+                  </Link>
+                ) : (
+                  <Link
+                    href="/auth/login/"
+                    className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
+                  >
+                    Sign In
+                  </Link>
+                )
+              )}
+
+              {/* Desktop Contact CTA */}
               <Link href="/contact/">
                 <Button size="sm" className="font-semibold">Contact Us</Button>
               </Link>
             </div>
 
             {/* Mobile Hamburger Trigger */}
-            <MobileNav />
+            <MobileNav customerSession={customerSession} />
           </div>
         </div>
       </Container>

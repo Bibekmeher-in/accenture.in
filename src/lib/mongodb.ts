@@ -41,9 +41,26 @@ if (!process.env.MONGODB_URI) {
         await db.collection("leadActivities").createIndex({ leadId: 1 })
         await db.collection("leadActivities").createIndex({ timestamp: -1 })
 
+        // Customer Indexes
+        await db.collection("customers").createIndex({ email: 1 }, { unique: true })
+        await db.collection("customers").createIndex({ createdAt: -1 })
+        await db.collection("customers").createIndex({ status: 1 })
+
+        // Order Indexes
+        await db.collection("orders").createIndex({ orderId: 1 }, { unique: true })
+        await db.collection("orders").createIndex({ customerId: 1 })
+        await db.collection("orders").createIndex({ createdAt: -1 })
+        await db.collection("orders").createIndex({ orderStatus: 1 })
+        await db.collection("orders").createIndex({ paymentStatus: 1 })
+
         // Audit Log Indexes
         await db.collection("auditLogs").createIndex({ timestamp: -1 })
         await db.collection("auditLogs").createIndex({ actor: 1 })
+
+        // Career Applications Indexes
+        await db.collection("careerApplications").createIndex({ customerId: 1 })
+        await db.collection("careerApplications").createIndex({ createdAt: -1 })
+        await db.collection("careerApplications").createIndex({ status: 1 })
       } catch (e) {
         console.error("Failed to initialize indexes:", e)
       }
@@ -73,9 +90,26 @@ if (!process.env.MONGODB_URI) {
       await db.collection("leadActivities").createIndex({ leadId: 1 })
       await db.collection("leadActivities").createIndex({ timestamp: -1 })
 
+      // Customer Indexes
+      await db.collection("customers").createIndex({ email: 1 }, { unique: true })
+      await db.collection("customers").createIndex({ createdAt: -1 })
+      await db.collection("customers").createIndex({ status: 1 })
+
+      // Order Indexes
+      await db.collection("orders").createIndex({ orderId: 1 }, { unique: true })
+      await db.collection("orders").createIndex({ customerId: 1 })
+      await db.collection("orders").createIndex({ createdAt: -1 })
+      await db.collection("orders").createIndex({ orderStatus: 1 })
+      await db.collection("orders").createIndex({ paymentStatus: 1 })
+
       // Audit Log Indexes
       await db.collection("auditLogs").createIndex({ timestamp: -1 })
       await db.collection("auditLogs").createIndex({ actor: 1 })
+
+      // Career Applications Indexes
+      await db.collection("careerApplications").createIndex({ customerId: 1 })
+      await db.collection("careerApplications").createIndex({ createdAt: -1 })
+      await db.collection("careerApplications").createIndex({ status: 1 })
     } catch (e) {
       console.error("Failed to initialize indexes in prod:", e)
     }

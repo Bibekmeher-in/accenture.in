@@ -75,12 +75,12 @@ export function CourseForm({ initialData, onSubmit, onCancel, isSubmitting }: Pr
   const [isUploading, setIsUploading] = useState(false)
   const [expandedModules, setExpandedModules] = useState<Record<string, boolean>>({})
 
-  const handleUpload = async (file: File) => {
+  const handleUpload = async (file: File, fileType: "thumbnail" | "resource" = "thumbnail") => {
     setIsUploading(true)
     try {
       const form = new FormData()
       form.append("file", file)
-      form.append("folder", "learning")
+      form.append("folder", fileType === "thumbnail" ? "learning/thumbnails" : "learning/resources")
 
       const res = await fetch("/api/admin/upload", {
         method: "POST",

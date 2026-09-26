@@ -2,12 +2,12 @@ import { Metadata } from "next"
 import clientPromise from "@/lib/mongodb"
 import { LearningHub } from "./LearningHub"
 
+export const dynamic = "force-dynamic"
+
 export const metadata: Metadata = {
   title: "Learning",
   description: "Build practical skills with structured learning resources and courses.",
 }
-
-export const dynamic = "force-dynamic"
 
 export default async function LearningPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -28,7 +28,7 @@ export default async function LearningPage() {
       _id: course._id.toString()
     }))
   } catch (error) {
-    console.error("Failed to load courses from database:", error)
+    console.error("Failed to load learning courses:", error)
   }
 
   return <LearningHub initialCourses={courses} />
