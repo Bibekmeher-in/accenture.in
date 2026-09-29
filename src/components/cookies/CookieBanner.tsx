@@ -1,6 +1,7 @@
 "use client"
 
 import { useSyncExternalStore, useCallback } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/Button"
 
 interface CookieSettings {
@@ -57,9 +58,9 @@ export function CookieBanner({ settings }: { settings: CookieSettings }) {
       <div className="max-w-4xl mx-auto bg-background border border-border shadow-2xl rounded-xl p-6 pointer-events-auto flex flex-col sm:flex-row items-center gap-6 justify-between animate-in slide-in-from-bottom-5">
         <div className="flex-1 text-sm text-foreground">
           {settings.bannerText}{" "}
-          <a href={settings.privacyPolicyUrl} className="text-primary hover:underline font-medium">
+          <Link href={settings.privacyPolicyUrl} className="text-primary hover:underline font-medium">
             Read our Privacy Policy.
-          </a>
+          </Link>
         </div>
         <div className="flex items-center gap-3 shrink-0 w-full sm:w-auto">
           <Button variant="outline" className="flex-1 sm:flex-none" onClick={declineCookies}>

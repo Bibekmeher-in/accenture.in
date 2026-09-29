@@ -4,7 +4,7 @@ import Link from "next/link"
 import { ObjectId } from "mongodb"
 import clientPromise from "@/lib/mongodb"
 import { formatINR } from "@/lib/currency"
-import { ArrowLeft, User, Mail, Phone, Calendar, ShoppingBag, MapPin, Globe, ShieldCheck } from "lucide-react"
+import { ArrowLeft, User, Mail, Phone, Calendar, ShoppingBag, MapPin, Globe, ShieldCheck, Briefcase } from "lucide-react"
 import { CustomerStatusToggle } from "./CustomerStatusToggle"
 
 export default async function AdminCustomerDetailPage({
@@ -34,6 +34,12 @@ export default async function AdminCustomerDetailPage({
   const orders = await db
     .collection("orders")
     .find({ customerId })
+    .sort({ createdAt: -1 })
+    .toArray()
+
+  const applications = await db
+    .collection("careerApplications")
+    .find({ $or: [{ customerId }, { email: customer.email }] })
     .sort({ createdAt: -1 })
     .toArray()
 
@@ -240,6 +246,47 @@ export default async function AdminCustomerDetailPage({
               </div>
             )}
           </div>
+
+          {/* Customer Career Applications */}
+          {applications.length > 0 && (
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Briefcase className="w-5 h-5 text-primary" /> Career Applications ({applications.length})
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[500px]">
+                  <thead>
+                    <tr className="border-b border-border text-xs font-semibold text-muted-foreground">
+                      <th className="py-2.5 px-3">Role</th>
+                      <th className="py-2.5 px-3">Date Applied</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60 text-xs">
+                    {applications.map((app) => (
+                      <tr key={app._id.toString()} className="hover:bg-muted/30 transition-colors">
+                        <td className="py-3 px-3 font-semibold text-foreground">{app.roleTitle}</td>
+                        <td className="py-3 px-3 text-muted-foreground">
+                          {app.createdAt ? new Date(app.createdAt).toLocaleDateString("en-IN") : "—"}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-600 uppercase">
+                            {app.status || "Pending Review"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <Link href="/admin/careers" className="text-xs font-bold text-primary hover:underline">
+                            View in Careers
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
 
           <div className="p-4 bg-muted/20 border border-border rounded-2xl flex items-center gap-2 text-xs text-muted-foreground">
             <ShieldCheck className="w-4 h-4 text-green-500 shrink-0" />

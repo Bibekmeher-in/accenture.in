@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import clientPromise from "@/lib/mongodb"
-import { setCustomerSessionCookie } from "@/lib/customer-auth"
+import { setCustomerSessionCookie, getSafeRedirectUrl } from "@/lib/customer-auth"
 import type { CustomerDoc } from "@/lib/customer-types"
 
 export async function GET(request: Request) {
@@ -23,12 +23,12 @@ export async function GET(request: Request) {
     // Malformed state
   }
 
-  const returnUrl = parsedState.returnUrl || "/account"
+  const returnUrl = getSafeRedirectUrl(parsedState.returnUrl, "/account")
 
   if (googleError || !code || !state || state !== parsedState.state) {
     const errorRedirect = new URL("/auth/login", url.origin)
     errorRedirect.searchParams.set("error", googleError === "access_denied" ? "google_cancelled" : "google_auth_failed")
-    if (returnUrl) errorRedirect.searchParams.set("redirect", returnUrl)
+    if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
     return NextResponse.redirect(errorRedirect)
   }
 
@@ -38,6 +38,7 @@ export async function GET(request: Request) {
   if (!clientId || !clientSecret) {
     const errorRedirect = new URL("/auth/login", url.origin)
     errorRedirect.searchParams.set("error", "google_unconfigured")
+    if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
     return NextResponse.redirect(errorRedirect)
   }
 
@@ -59,14 +60,22 @@ export async function GET(request: Request) {
     })
 
     if (!tokenResponse.ok) {
-      console.error("Google token exchange failed:", await tokenResponse.text())
+      console.error("Google token exchange failed:", tokenResponse.status)
       const errorRedirect = new URL("/auth/login", url.origin)
       errorRedirect.searchParams.set("error", "google_exchange_failed")
+      if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
       return NextResponse.redirect(errorRedirect)
     }
 
     const tokenData = await tokenResponse.json()
     const accessToken = tokenData.access_token
+
+    if (!accessToken) {
+      const errorRedirect = new URL("/auth/login", url.origin)
+      errorRedirect.searchParams.set("error", "google_exchange_failed")
+      if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
+      return NextResponse.redirect(errorRedirect)
+    }
 
     // Fetch verified profile info from Google
     const userinfoResponse = await fetch("https://www.googleapis.com/oauth2/v3/userinfo", {
@@ -76,20 +85,22 @@ export async function GET(request: Request) {
     })
 
     if (!userinfoResponse.ok) {
-      console.error("Failed to fetch Google userinfo:", await userinfoResponse.text())
+      console.error("Failed to fetch Google userinfo:", userinfoResponse.status)
       const errorRedirect = new URL("/auth/login", url.origin)
       errorRedirect.searchParams.set("error", "google_profile_failed")
+      if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
       return NextResponse.redirect(errorRedirect)
     }
 
     const profile = await userinfoResponse.json()
     const email = profile.email?.trim().toLowerCase()
-    const googleSub = profile.sub
-    const name = profile.name || profile.given_name || email.split("@")[0]
+    const googleSub = profile.sub ? String(profile.sub).trim() : null
+    const name = profile.name || profile.given_name || (email ? email.split("@")[0] : "")
 
-    if (!email || !profile.email_verified) {
+    if (!email || !googleSub || !profile.email_verified) {
       const errorRedirect = new URL("/auth/login", url.origin)
       errorRedirect.searchParams.set("error", "google_unverified_email")
+      if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
       return NextResponse.redirect(errorRedirect)
     }
 
@@ -107,9 +118,44 @@ export async function GET(request: Request) {
         return NextResponse.redirect(errorRedirect)
       }
 
-      // Link google provider if not already linked
-      const hasGoogle = customer.authProviders?.some(p => p.provider === "google")
-      if (!hasGoogle) {
+      // Check existing Google auth provider on this customer
+      const existingGoogleProvider = customer.authProviders?.find(p => p.provider === "google")
+
+      if (existingGoogleProvider) {
+        // If already linked, verify that providerId is consistent
+        if (existingGoogleProvider.providerId && existingGoogleProvider.providerId !== googleSub) {
+          const errorRedirect = new URL("/auth/login", url.origin)
+          errorRedirect.searchParams.set("error", "google_auth_failed")
+          if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
+          return NextResponse.redirect(errorRedirect)
+        }
+
+        await customersCollection.updateOne(
+          { _id: customer._id },
+          {
+            $set: {
+              emailVerified: true,
+              lastLoginAt: now,
+              updatedAt: now,
+            }
+          }
+        )
+      } else {
+        // Google is not linked to this customer yet.
+        // Verify that the Google providerId is not already associated with another customer.
+        const providerConflict = await customersCollection.findOne({
+          "authProviders.provider": "google",
+          "authProviders.providerId": googleSub,
+        })
+
+        if (providerConflict && !providerConflict._id?.equals(customer._id)) {
+          const errorRedirect = new URL("/auth/login", url.origin)
+          errorRedirect.searchParams.set("error", "google_auth_failed")
+          if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
+          return NextResponse.redirect(errorRedirect)
+        }
+
+        // Link Google provider to existing customer
         await customersCollection.updateOne(
           { _id: customer._id },
           {
@@ -119,20 +165,31 @@ export async function GET(request: Request) {
                 providerId: googleSub,
                 linkedAt: now,
               }
-            },
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any,
             $set: {
+              emailVerified: true,
               lastLoginAt: now,
               updatedAt: now,
             }
           }
         )
-      } else {
-        await customersCollection.updateOne(
-          { _id: customer._id },
-          { $set: { lastLoginAt: now } }
-        )
       }
     } else {
+      // Customer does not exist by email.
+      // Verify that this Google providerId is not already associated with another customer.
+      const providerConflict = await customersCollection.findOne({
+        "authProviders.provider": "google",
+        "authProviders.providerId": googleSub,
+      })
+
+      if (providerConflict) {
+        const errorRedirect = new URL("/auth/login", url.origin)
+        errorRedirect.searchParams.set("error", "google_auth_failed")
+        if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
+        return NextResponse.redirect(errorRedirect)
+      }
+
       // Create new customer
       const newCustomer: CustomerDoc = {
         name,
@@ -160,18 +217,19 @@ export async function GET(request: Request) {
 
     await setCustomerSessionCookie({
       customerId,
-      email,
+      email: customer.email,
       name: customer.name || name,
       role: "customer"
     })
 
     // Safe redirect back to original destination
-    const destinationUrl = new URL(returnUrl.startsWith("/") ? returnUrl : `/${returnUrl}`, url.origin)
+    const destinationUrl = new URL(returnUrl, url.origin)
     return NextResponse.redirect(destinationUrl)
   } catch (err) {
-    console.error("Google callback handling error:", err)
+    console.error("Google callback error:", err)
     const errorRedirect = new URL("/auth/login", url.origin)
     errorRedirect.searchParams.set("error", "google_server_error")
+    if (returnUrl && returnUrl !== "/account") errorRedirect.searchParams.set("redirect", returnUrl)
     return NextResponse.redirect(errorRedirect)
   }
 }

@@ -61,7 +61,7 @@ export default async function RootLayout({
   let cookieSettings = {
     enabled: true,
     bannerText: "We use cookies to improve your experience and analyze site traffic. By continuing to use this site, you consent to our use of cookies.",
-    privacyPolicyUrl: "/privacy-policy"
+    privacyPolicyUrl: "/privacy-policy/"
   }
 
   try {

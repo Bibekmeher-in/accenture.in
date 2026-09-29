@@ -472,15 +472,6 @@ export function CareersClient() {
               <p className="text-foreground font-semibold text-sm max-w-lg mx-auto mt-4">
                 Upload your resume and we will contact you if a suitable position becomes available.
               </p>
-
-              <div className="pt-6">
-                <button
-                  onClick={handleUploadClick}
-                  className="px-6 py-3 bg-primary text-primary-foreground font-bold text-sm rounded-xl hover:bg-primary/90 transition-all shadow-md inline-flex items-center gap-2"
-                >
-                  <Upload className="w-4 h-4" /> Upload Resume
-                </button>
-              </div>
             </div>
 
             {/* What We Value */}
@@ -530,15 +521,6 @@ export function CareersClient() {
                   <div className="w-6 h-6 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center shrink-0">3</div>
                   <p><strong className="text-foreground">Confidential & Secure:</strong> Your resume is stored in private encrypted storage with no public web access.</p>
                 </div>
-              </div>
-
-              <div className="pt-4 border-t border-border">
-                <button
-                  onClick={handleUploadClick}
-                  className="w-full py-3 bg-primary text-primary-foreground font-bold text-sm rounded-xl hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-sm"
-                >
-                  <Upload className="w-4 h-4" /> Upload Resume
-                </button>
               </div>
             </div>
           </div>

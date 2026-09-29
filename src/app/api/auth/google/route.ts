@@ -1,10 +1,11 @@
 import { NextResponse } from "next/server"
 import { cookies } from "next/headers"
 import crypto from "crypto"
+import { getSafeRedirectUrl } from "@/lib/customer-auth"
 
 export async function GET(request: Request) {
   const url = new URL(request.url)
-  const returnUrl = url.searchParams.get("redirect") || "/account"
+  const returnUrl = getSafeRedirectUrl(url.searchParams.get("redirect"), "/account")
 
   const clientId = process.env.GOOGLE_CLIENT_ID
   const clientSecret = process.env.GOOGLE_CLIENT_SECRET
@@ -13,7 +14,7 @@ export async function GET(request: Request) {
     // Graceful error redirect informing customer that Google OAuth requires credentials
     const redirectUrl = new URL("/auth/login", url.origin)
     redirectUrl.searchParams.set("error", "google_unconfigured")
-    if (returnUrl) redirectUrl.searchParams.set("redirect", returnUrl)
+    if (returnUrl && returnUrl !== "/account") redirectUrl.searchParams.set("redirect", returnUrl)
     return NextResponse.redirect(redirectUrl)
   }
 

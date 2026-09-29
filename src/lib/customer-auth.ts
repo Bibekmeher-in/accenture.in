@@ -1,9 +1,13 @@
 import { jwtVerify, SignJWT } from "jose"
 import { cookies } from "next/headers"
 
-const key = new TextEncoder().encode(
-  process.env.JWT_SECRET || "fallback-secret-for-local-development-only-do-not-use-in-production"
-)
+const jwtSecret = process.env.JWT_SECRET
+
+if (!jwtSecret) {
+  throw new Error("JWT_SECRET environment variable is required.")
+}
+
+const key = new TextEncoder().encode(jwtSecret)
 
 export const CUSTOMER_SESSION_COOKIE_NAME = "teknixx_customer_session"
 export const CUSTOMER_SESSION_EXPIRATION = 7 * 24 * 60 * 60 // 7 days in seconds
@@ -88,4 +92,31 @@ export async function requireCustomerAuth(): Promise<
 export async function clearCustomerSession() {
   const cookieStore = await cookies()
   cookieStore.delete(CUSTOMER_SESSION_COOKIE_NAME)
+}
+
+/**
+ * Validates and sanitizes internal application redirect paths.
+ * Blocks external URLs, protocol-relative URLs, and invalid formats.
+ */
+export function getSafeRedirectUrl(redirectParam: string | null | undefined, fallback = "/account"): string {
+  if (!redirectParam || typeof redirectParam !== "string") {
+    return fallback
+  }
+
+  const trimmed = redirectParam.trim()
+
+  // Must start with '/' and not '//' or contain backslashes
+  if (!trimmed.startsWith("/") || trimmed.startsWith("//") || trimmed.includes("\\")) {
+    return fallback
+  }
+
+  try {
+    const parsed = new URL(trimmed, "http://localhost")
+    if (parsed.origin !== "http://localhost" || parsed.protocol !== "http:") {
+      return fallback
+    }
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`
+  } catch {
+    return fallback
+  }
 }

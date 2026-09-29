@@ -144,6 +144,36 @@ export async function deleteProduct(id: string) {
     const productToDelete = await db.collection("products").findOne({ _id: new ObjectId(id) })
     if (!productToDelete) return { error: "Product not found" }
 
+    // Check if this product has historical orders
+    const hasOrders = await db.collection("orders").findOne({
+      "items.productId": id,
+    })
+
+    if (hasOrders) {
+      // Archive instead of hard-deleting to preserve order history
+      await db.collection("products").updateOne(
+        { _id: new ObjectId(id) },
+        {
+          $set: {
+            status: "Archived",
+            updatedAt: new Date().toISOString(),
+          },
+        }
+      )
+
+      await logAudit({
+        actor: session.username,
+        action: "STORE_PRODUCT_UPDATED",
+        entity: "Store",
+        entityId: id,
+        metadata: { name: productToDelete.name, action: "archived_due_to_existing_orders" },
+      })
+
+      revalidatePath("/store")
+      revalidatePath("/admin/store")
+      return { success: true, archived: true, message: "Product has existing customer orders. It has been archived instead of permanently deleted to preserve order integrity." }
+    }
+
     await db.collection("products").deleteOne({ _id: new ObjectId(id) })
 
     await logAudit({
@@ -151,7 +181,7 @@ export async function deleteProduct(id: string) {
       action: "STORE_PRODUCT_DELETED",
       entity: "Store",
       entityId: id,
-      metadata: { name: productToDelete.name }
+      metadata: { name: productToDelete.name },
     })
 
     revalidatePath("/store")

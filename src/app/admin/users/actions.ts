@@ -138,3 +138,51 @@ export async function updateRole(id: string, newRole: string) {
     return { error: "Failed to update role" }
   }
 }
+
+export async function resetUserPassword(id: string, newPasswordRaw: string) {
+  try {
+    const { authorized, session } = await requireRole("super_admin")
+    if (!authorized || !session) return { error: "Unauthorized. Super Admin only." }
+
+    if (!newPasswordRaw || newPasswordRaw.length < 8) {
+      return { error: "Password must be at least 8 characters long." }
+    }
+
+    if (!ObjectId.isValid(id)) {
+      return { error: "Invalid user ID." }
+    }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    const userToUpdate = await db.collection("admin").findOne({ _id: new ObjectId(id) })
+    if (!userToUpdate) return { error: "User not found" }
+
+    const salt = await bcrypt.genSalt(10)
+    const passwordHash = await bcrypt.hash(newPasswordRaw, salt)
+
+    await db.collection("admin").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          passwordHash,
+          updatedAt: new Date().toISOString()
+        }
+      }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "ADMIN_PASSWORD_RESET",
+      entity: "Admin",
+      entityId: id,
+      metadata: { targetUsername: userToUpdate.username }
+    })
+
+    revalidatePath("/admin/users")
+    return { success: true }
+  } catch (err) {
+    console.error("resetUserPassword error:", err)
+    return { error: "Failed to reset password." }
+  }
+}

@@ -37,6 +37,12 @@ export function Navbar() {
   const [customerSession, setCustomerSession] = React.useState<{ name: string; email: string } | null>(null)
   const [isSessionLoading, setIsSessionLoading] = React.useState(true)
 
+  const mounted = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
+
   React.useEffect(() => {
     fetch("/api/customer/session")
       .then((res) => res.json())
@@ -85,19 +91,19 @@ export function Navbar() {
 
           {/* Actions & Mobile Trigger */}
           <div className="flex items-center gap-1.5 sm:gap-3">
-            {/* Cart Trigger Button */}
-            <button
-              onClick={() => setIsCartOpen(true)}
-              className="relative p-2 sm:p-2.5 rounded-full hover:bg-muted text-foreground transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-              aria-label={`Shopping cart with ${totalItems} items`}
-            >
-              <ShoppingBag className="w-5 h-5 text-foreground" />
-              {totalItems > 0 && (
-                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm animate-in zoom-in-75">
+            {/* Cart Trigger Button - Only shown when items are added to cart */}
+            {mounted && totalItems > 0 && (
+              <button
+                onClick={() => setIsCartOpen(true)}
+                className="relative p-2 sm:p-2.5 rounded-full hover:bg-muted text-foreground transition-colors flex items-center justify-center focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary animate-in fade-in zoom-in-75 duration-200"
+                aria-label={`Shopping cart with ${totalItems} items`}
+              >
+                <ShoppingBag className="w-5 h-5 text-foreground" />
+                <span className="absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 bg-primary text-primary-foreground text-[10px] font-bold rounded-full flex items-center justify-center shadow-sm">
                   {totalItems > 99 ? "99+" : totalItems}
                 </span>
-              )}
-            </button>
+              </button>
+            )}
 
             {/* Customer Authentication State (Desktop) */}
             <div className="hidden md:flex items-center gap-2">

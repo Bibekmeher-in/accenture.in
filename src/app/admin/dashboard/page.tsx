@@ -40,6 +40,8 @@ export default async function AdminDashboardPage() {
 
   // 2. Customer & Store Metrics
   const totalCustomers = await db.collection("customers").countDocuments()
+  const activeCustomers = await db.collection("customers").countDocuments({ status: { $ne: "Disabled" } })
+  const disabledCustomers = await db.collection("customers").countDocuments({ status: "Disabled" })
   const newCustomers30d = await db.collection("customers").countDocuments({
     createdAt: { $gte: thirtyDaysAgo },
   })
@@ -60,12 +62,20 @@ export default async function AdminDashboardPage() {
   ]).toArray()
   const totalOrderValue = totalOrderValueAgg[0]?.total || 0
 
-  // 3. Content Metrics
+  // 3. Products & Learning Metrics
+  const totalProducts = await db.collection("products").countDocuments()
+  const publishedProducts = await db.collection("products").countDocuments({ status: "Published" })
+  const totalCourses = await db.collection("learning").countDocuments()
+  const publishedCourses = await db.collection("learning").countDocuments({ status: "Published" })
+
+  // 4. Careers & Content Metrics
+  const totalApplications = await db.collection("careerApplications").countDocuments()
+  const pendingApplications = await db.collection("careerApplications").countDocuments({ status: "Pending Review" })
   const blogCount = await db.collection("blog").countDocuments()
   const portfolioCount = await db.collection("portfolio").countDocuments()
   const servicesCount = await db.collection("services").countDocuments()
 
-  // 4. Recent Activities
+  // 5. Recent Activities
   const recentOrders = await db.collection("orders").find({}).sort({ createdAt: -1 }).limit(5).toArray()
   const recentCustomers = await db
     .collection("customers")
@@ -81,7 +91,7 @@ export default async function AdminDashboardPage() {
       name: "Total Customers",
       value: totalCustomers,
       icon: UserCheck,
-      desc: `${newCustomers30d} joined in last 30 days`,
+      desc: `${activeCustomers} active · ${disabledCustomers} disabled · ${newCustomers30d} new (30d)`,
       color: "text-blue-500",
       bg: "bg-blue-500/10",
       href: "/admin/customers",
@@ -105,48 +115,52 @@ export default async function AdminDashboardPage() {
       href: "/admin/orders",
     },
     {
-      name: "Pending Order Value",
-      value: formatINR(totalOrderValue - paidRevenue),
+      name: "Store Products",
+      value: totalProducts,
       icon: DollarSign,
-      desc: `${pendingPayments} pending payments`,
+      desc: `${publishedProducts} published in catalog`,
       color: "text-amber-500",
       bg: "bg-amber-500/10",
-      href: "/admin/orders",
+      href: "/admin/store",
     },
   ]
 
-  const pipelineStats = [
+  const operationsStats = [
     {
       name: "Total Leads",
       value: leadsCount,
       icon: Users,
-      desc: `${newLeadsCount} new leads`,
+      desc: `${newLeadsCount} new · ${openLeadsCount} active in pipeline`,
       color: "text-blue-500",
       bg: "bg-blue-500/10",
+      href: "/admin/leads",
     },
     {
-      name: "Open Pipeline",
-      value: openLeadsCount,
+      name: "Career Applications",
+      value: totalApplications,
       icon: Target,
-      desc: "Active prospect deals",
+      desc: `${pendingApplications} pending review`,
       color: "text-purple-500",
       bg: "bg-purple-500/10",
+      href: "/admin/careers",
     },
     {
-      name: "Won Deals",
-      value: wonLeadsCount,
+      name: "Learning Courses",
+      value: totalCourses,
       icon: CheckCircle2,
-      desc: "Closed contracts",
+      desc: `${publishedCourses} published modules`,
       color: "text-green-500",
       bg: "bg-green-500/10",
+      href: "/admin/learning",
     },
     {
-      name: "Services Offered",
+      name: "Content & Services",
       value: servicesCount,
       icon: LayoutTemplate,
-      desc: `${blogCount} blogs, ${portfolioCount} projects`,
+      desc: `${servicesCount} services · ${blogCount} blogs · ${portfolioCount} projects`,
       color: "text-primary",
       bg: "bg-primary/10",
+      href: "/admin/services",
     },
   ]
 
@@ -192,17 +206,23 @@ export default async function AdminDashboardPage() {
         </div>
       </div>
 
-      {/* Pipeline Section */}
+      {/* Operations & Pipeline Section */}
       <div>
-        <h2 className="text-lg font-bold text-foreground mb-4">Lead & Pipeline Metrics</h2>
+        <h2 className="text-lg font-bold text-foreground mb-4">Operations & Growth Metrics</h2>
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {pipelineStats.map((stat) => {
+          {operationsStats.map((stat) => {
             const Icon = stat.icon
             return (
-              <div key={stat.name} className="bg-card border border-border rounded-2xl p-5 shadow-sm">
+              <Link
+                key={stat.name}
+                href={stat.href}
+                className="bg-card border border-border hover:border-primary/40 rounded-2xl p-5 shadow-sm transition-all block group"
+              >
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground">{stat.name}</p>
+                    <p className="text-xs font-semibold text-muted-foreground group-hover:text-primary transition-colors">
+                      {stat.name}
+                    </p>
                     <p className="text-2xl font-bold text-foreground mt-1">{stat.value}</p>
                   </div>
                   <div className={`p-3 rounded-xl ${stat.bg}`}>
@@ -210,7 +230,7 @@ export default async function AdminDashboardPage() {
                   </div>
                 </div>
                 <div className="mt-3 text-xs text-muted-foreground">{stat.desc}</div>
-              </div>
+              </Link>
             )
           })}
         </div>

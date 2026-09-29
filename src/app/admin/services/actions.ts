@@ -57,10 +57,71 @@ export async function createService(data: Record<string, string>) {
   }
 }
 
+export async function updateService(id: string, data: Record<string, string>) {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    if (!ObjectId.isValid(id)) {
+      return { error: "Invalid service ID" }
+    }
+
+    const parsed = ServiceSchema.safeParse(data)
+    if (!parsed.success) {
+      return { error: "Invalid service data" }
+    }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    // Check slug uniqueness across other services
+    const existing = await db.collection("services").findOne({
+      slug: parsed.data.slug,
+      _id: { $ne: new ObjectId(id) }
+    })
+    if (existing) {
+      return { error: "Slug is already used by another service" }
+    }
+
+    await db.collection("services").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          title: parsed.data.title,
+          slug: parsed.data.slug,
+          description: parsed.data.description,
+          icon: parsed.data.icon || "LayoutTemplate",
+          updatedAt: new Date().toISOString(),
+        }
+      }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "SERVICE_UPDATED",
+      entity: "Service",
+      entityId: id,
+      metadata: { title: parsed.data.title }
+    })
+
+    revalidatePath("/services")
+    revalidatePath(`/services/${parsed.data.slug}`)
+    revalidatePath("/admin/services")
+    return { success: true }
+  } catch (err) {
+    console.error("updateService error:", err)
+    return { error: "Failed to update service" }
+  }
+}
+
 export async function deleteService(id: string) {
   try {
     const session = await getSession()
     if (!session) return { error: "Unauthorized" }
+
+    if (!ObjectId.isValid(id)) {
+      return { error: "Invalid service ID" }
+    }
 
     const client = await clientPromise
     const db = client.db("accenture")

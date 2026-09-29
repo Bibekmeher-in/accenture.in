@@ -221,25 +221,23 @@ export function MobileNav({
             })}
           </div>
 
-          {/* Cart Quick Access */}
-          <button
-            onClick={handleCartClick}
-            className="w-full mt-2 flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium border border-border bg-muted/40 hover:bg-muted text-foreground transition-colors group text-left"
-          >
-            <div className="flex items-center gap-3">
-              <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
-                <ShoppingBag className="h-4 w-4" />
+          {/* Cart Quick Access - Only shown when items are in cart */}
+          {mounted && totalItems > 0 && (
+            <button
+              onClick={handleCartClick}
+              className="w-full mt-2 flex items-center justify-between px-3.5 py-3 rounded-xl text-sm font-medium border border-border bg-muted/40 hover:bg-muted text-foreground transition-colors group text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-1.5 rounded-lg bg-primary/10 text-primary">
+                  <ShoppingBag className="h-4 w-4" />
+                </div>
+                <span className="font-semibold">Shopping Cart</span>
               </div>
-              <span className="font-semibold">Shopping Cart</span>
-            </div>
-            {totalItems > 0 ? (
               <span className="px-2 py-0.5 text-xs font-bold bg-primary text-primary-foreground rounded-full">
                 {totalItems} item{totalItems > 1 ? "s" : ""}
               </span>
-            ) : (
-              <span className="text-xs text-muted-foreground">Empty</span>
-            )}
-          </button>
+            </button>
+          )}
         </div>
 
         {/* Drawer Bottom Actions & Contacts */}
