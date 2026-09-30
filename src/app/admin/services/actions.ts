@@ -9,19 +9,48 @@ import { z } from "zod"
 
 const ServiceSchema = z.object({
   title: z.string().min(1).max(200),
-  slug: z.string().min(1).max(200),
+  slug: z.string().min(1).max(200).regex(/^[a-z0-9-]+$/, "Slug must contain only lowercase letters, numbers, and hyphens"),
   description: z.string().min(1).max(1000),
   icon: z.string().optional(),
+  introduction: z.string().max(2000).optional(),
+  covers: z.array(z.string()).default([]),
+  benefits: z.array(z.string()).default([]),
+  status: z.enum(["Published", "Draft"]).default("Published"),
+  orderRank: z.number().int().default(0),
 })
 
-export async function createService(data: Record<string, string>) {
+export async function createService(data: Record<string, unknown>) {
   try {
     const session = await getSession()
     if (!session) return { error: "Unauthorized" }
 
-    const parsed = ServiceSchema.safeParse(data)
+    // Parse covers & benefits if submitted as string (newline or comma separated)
+    let coversArray: string[] = []
+    if (typeof data.covers === "string") {
+      coversArray = data.covers.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+    } else if (Array.isArray(data.covers)) {
+      coversArray = data.covers
+    }
+
+    let benefitsArray: string[] = []
+    if (typeof data.benefits === "string") {
+      benefitsArray = data.benefits.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+    } else if (Array.isArray(data.benefits)) {
+      benefitsArray = data.benefits
+    }
+
+    const payload = {
+      ...data,
+      covers: coversArray,
+      benefits: benefitsArray,
+      orderRank: Number(data.orderRank) || 0,
+      status: data.status || "Published",
+    }
+
+    const parsed = ServiceSchema.safeParse(payload)
     if (!parsed.success) {
-      return { error: "Invalid service data" }
+      console.error("Service validation error:", parsed.error)
+      return { error: "Invalid service data. Ensure slug has valid format." }
     }
 
     const client = await clientPromise
@@ -30,34 +59,38 @@ export async function createService(data: Record<string, string>) {
     // Check slug uniqueness
     const existing = await db.collection("services").findOne({ slug: parsed.data.slug })
     if (existing) {
-      return { error: "Slug must be unique" }
+      return { error: "A service with this slug already exists." }
     }
 
-    const result = await db.collection("services").insertOne({
-      title: parsed.data.title,
-      slug: parsed.data.slug,
-      description: parsed.data.description,
+    const doc = {
+      ...parsed.data,
       icon: parsed.data.icon || "LayoutTemplate",
+      introduction: parsed.data.introduction || parsed.data.description,
       createdAt: new Date().toISOString(),
-    })
+      updatedAt: new Date().toISOString(),
+    }
+
+    const result = await db.collection("services").insertOne(doc)
 
     await logAudit({
       actor: session.username,
       action: "SERVICE_CREATED",
       entity: "Service",
       entityId: result.insertedId.toString(),
-      metadata: { title: parsed.data.title }
+      metadata: { title: parsed.data.title, slug: parsed.data.slug }
     })
 
     revalidatePath("/services")
+    revalidatePath(`/services/${parsed.data.slug}`)
     revalidatePath("/admin/services")
     return { success: true }
-  } catch {
+  } catch (err) {
+    console.error("createService error:", err)
     return { error: "Failed to create service" }
   }
 }
 
-export async function updateService(id: string, data: Record<string, string>) {
+export async function updateService(id: string, data: Record<string, unknown>) {
   try {
     const session = await getSession()
     if (!session) return { error: "Unauthorized" }
@@ -66,7 +99,29 @@ export async function updateService(id: string, data: Record<string, string>) {
       return { error: "Invalid service ID" }
     }
 
-    const parsed = ServiceSchema.safeParse(data)
+    let coversArray: string[] = []
+    if (typeof data.covers === "string") {
+      coversArray = data.covers.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+    } else if (Array.isArray(data.covers)) {
+      coversArray = data.covers
+    }
+
+    let benefitsArray: string[] = []
+    if (typeof data.benefits === "string") {
+      benefitsArray = data.benefits.split(/[\n,]+/).map(s => s.trim()).filter(Boolean)
+    } else if (Array.isArray(data.benefits)) {
+      benefitsArray = data.benefits
+    }
+
+    const payload = {
+      ...data,
+      covers: coversArray,
+      benefits: benefitsArray,
+      orderRank: Number(data.orderRank) || 0,
+      status: data.status || "Published",
+    }
+
+    const parsed = ServiceSchema.safeParse(payload)
     if (!parsed.success) {
       return { error: "Invalid service data" }
     }
@@ -87,10 +142,9 @@ export async function updateService(id: string, data: Record<string, string>) {
       { _id: new ObjectId(id) },
       {
         $set: {
-          title: parsed.data.title,
-          slug: parsed.data.slug,
-          description: parsed.data.description,
+          ...parsed.data,
           icon: parsed.data.icon || "LayoutTemplate",
+          introduction: parsed.data.introduction || parsed.data.description,
           updatedAt: new Date().toISOString(),
         }
       }
@@ -101,7 +155,7 @@ export async function updateService(id: string, data: Record<string, string>) {
       action: "SERVICE_UPDATED",
       entity: "Service",
       entityId: id,
-      metadata: { title: parsed.data.title }
+      metadata: { title: parsed.data.title, slug: parsed.data.slug }
     })
 
     revalidatePath("/services")
@@ -111,6 +165,44 @@ export async function updateService(id: string, data: Record<string, string>) {
   } catch (err) {
     console.error("updateService error:", err)
     return { error: "Failed to update service" }
+  }
+}
+
+export async function toggleServiceStatus(id: string, newStatus: "Published" | "Draft") {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    if (!ObjectId.isValid(id)) {
+      return { error: "Invalid service ID" }
+    }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("services").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
+        }
+      }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "SERVICE_STATUS_UPDATED",
+      entity: "Service",
+      entityId: id,
+      metadata: { newStatus }
+    })
+
+    revalidatePath("/services")
+    revalidatePath("/admin/services")
+    return { success: true }
+  } catch {
+    return { error: "Failed to update service status" }
   }
 }
 

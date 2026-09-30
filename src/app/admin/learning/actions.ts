@@ -141,6 +141,36 @@ export async function updateCourse(id: string, data: Record<string, unknown>) {
   }
 }
 
+export async function toggleCourseStatus(id: string, newStatus: "Draft" | "Published" | "Archived") {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("learning").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: newStatus, updatedAt: new Date().toISOString() } }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "LEARNING_COURSE_STATUS_TOGGLED",
+      entity: "Learning",
+      entityId: id,
+      metadata: { status: newStatus }
+    })
+
+    revalidatePath("/learning")
+    revalidatePath("/admin/learning")
+    return { success: true }
+  } catch (err) {
+    console.error("Toggle course status error:", err)
+    return { error: "Failed to update course status" }
+  }
+}
+
 export async function deleteCourse(id: string) {
   try {
     const session = await getSession()
@@ -151,6 +181,35 @@ export async function deleteCourse(id: string) {
 
     const courseToDelete = await db.collection("learning").findOne({ _id: new ObjectId(id) })
     if (!courseToDelete) return { error: "Course not found" }
+
+    // Check for student enrollments
+    const enrollmentCount = await db.collection("enrollments").countDocuments({
+      courseId: id,
+    })
+
+    if (enrollmentCount > 0) {
+      // Safe archive instead of deleting student records
+      await db.collection("learning").updateOne(
+        { _id: new ObjectId(id) },
+        { $set: { status: "Archived", updatedAt: new Date().toISOString() } }
+      )
+
+      await logAudit({
+        actor: session.username,
+        action: "LEARNING_COURSE_ARCHIVED_SAFE",
+        entity: "Learning",
+        entityId: id,
+        metadata: { title: courseToDelete.title, reason: "Has student enrollments", enrollmentCount }
+      })
+
+      revalidatePath("/learning")
+      revalidatePath("/admin/learning")
+      return {
+        success: true,
+        archived: true,
+        message: `Course has ${enrollmentCount} active student enrollments. To preserve student records and progress, it was moved to Archived status instead of being deleted.`
+      }
+    }
 
     await db.collection("learning").deleteOne({ _id: new ObjectId(id) })
 
@@ -168,5 +227,59 @@ export async function deleteCourse(id: string) {
   } catch (err) {
     console.error("Delete course error:", err)
     return { error: "Failed to delete course" }
+  }
+}
+
+export async function updateEnrollmentStatus(enrollmentId: string, status: "Active" | "Completed" | "Dropped") {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("enrollments").updateOne(
+      { _id: new ObjectId(enrollmentId) },
+      { $set: { status, updatedAt: new Date().toISOString() } }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "ENROLLMENT_STATUS_UPDATED",
+      entity: "Enrollment",
+      entityId: enrollmentId,
+      metadata: { status }
+    })
+
+    revalidatePath("/admin/learning")
+    return { success: true }
+  } catch (err) {
+    console.error("Update enrollment status error:", err)
+    return { error: "Failed to update enrollment status" }
+  }
+}
+
+export async function deleteEnrollment(enrollmentId: string) {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("enrollments").deleteOne({ _id: new ObjectId(enrollmentId) })
+
+    await logAudit({
+      actor: session.username,
+      action: "ENROLLMENT_DELETED",
+      entity: "Enrollment",
+      entityId: enrollmentId,
+    })
+
+    revalidatePath("/admin/learning")
+    return { success: true }
+  } catch (err) {
+    console.error("Delete enrollment error:", err)
+    return { error: "Failed to delete enrollment" }
   }
 }

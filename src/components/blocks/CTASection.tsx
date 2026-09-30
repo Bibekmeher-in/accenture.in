@@ -5,9 +5,10 @@ import { Section } from "@/components/ui/Section"
 import { buttonStyles } from "@/components/ui/Button"
 
 interface CTASectionProps {
-  heading: string
-  description: string
-  primaryAction: {
+  heading?: string
+  description?: string
+  badge?: string
+  primaryAction?: {
     label: string
     href: string
   }
@@ -15,18 +16,29 @@ interface CTASectionProps {
     label: string
     href: string
   }
+  className?: string
 }
 
 export function CTASection({
-  heading,
-  description,
-  primaryAction,
+  heading = "Ready to discuss your project?",
+  description = "Let's talk about your business requirements and explore how we can help.",
+  badge,
+  primaryAction = {
+    label: "Start a Project",
+    href: "/contact/",
+  },
   secondaryAction,
+  className = "",
 }: CTASectionProps) {
   return (
-    <Section className="bg-primary text-primary-foreground border-y border-border">
+    <Section className={`bg-primary text-primary-foreground border-y border-border ${className}`}>
       <Container>
         <div className="flex flex-col items-center text-center max-w-3xl mx-auto">
+          {badge && (
+            <span className="inline-block px-3 py-1 text-xs font-black tracking-widest uppercase rounded-full bg-primary-foreground/20 text-primary-foreground mb-4">
+              {badge}
+            </span>
+          )}
           <h2 className="text-3xl md:text-4xl font-bold tracking-tight mb-6">
             {heading}
           </h2>
@@ -34,16 +46,23 @@ export function CTASection({
             {description}
           </p>
           <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-            <Link
-              href={primaryAction.href}
-              className={buttonStyles({ size: "lg", variant: "secondary", className: "w-full sm:w-auto" })}
-            >
-              {primaryAction.label}
-            </Link>
-            {secondaryAction && (
+            {primaryAction?.label && (
+              <Link
+                href={primaryAction.href}
+                className={buttonStyles({ size: "lg", variant: "secondary", className: "w-full sm:w-auto font-bold" })}
+              >
+                {primaryAction.label}
+              </Link>
+            )}
+            {secondaryAction?.label && (
               <Link
                 href={secondaryAction.href}
-                className={buttonStyles({ size: "lg", variant: "outline", className: "w-full sm:w-auto border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary" })}
+                className={buttonStyles({
+                  size: "lg",
+                  variant: "outline",
+                  className:
+                    "w-full sm:w-auto border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary font-bold",
+                })}
               >
                 {secondaryAction.label}
               </Link>

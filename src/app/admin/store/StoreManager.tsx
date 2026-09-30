@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { createProduct, updateProduct, deleteProduct, archiveProduct } from "./actions"
+import { createProduct, updateProduct, deleteProduct, archiveProduct, toggleProductStatus, toggleProductFeatured } from "./actions"
 import { Store, Plus, Edit, Trash2, Box, ArrowLeft, Eye, Archive, Search, Check, AlertCircle } from "lucide-react"
 import { ProductForm, ProductFormData } from "./ProductForm"
 import { formatINR } from "@/lib/currency"
@@ -310,21 +310,50 @@ export function StoreManager({ initialProducts: products }: StoreManagerProps) {
                       )}
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex items-center gap-1.5">
-                        <span className={`text-xs font-semibold px-2.5 py-0.5 rounded-full border ${
-                          product.status === "Published"
-                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
-                            : product.status === "Draft"
-                            ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
-                            : "bg-muted text-muted-foreground border-border"
-                        }`}>
-                          {product.status}
-                        </span>
-                        {product.isFeatured && (
-                          <span className="text-[10px] uppercase font-bold text-primary bg-primary/10 border border-primary/20 px-1.5 py-0.5 rounded">
-                            Featured
-                          </span>
-                        )}
+                      <div className="flex items-center gap-2">
+                        <select
+                          value={product.status}
+                          onChange={(e) => {
+                            const newStatus = e.target.value as "Draft" | "Published" | "Archived"
+                            startTransition(async () => {
+                              const res = await toggleProductStatus(product._id, newStatus)
+                              if (res.error) setBanner({ type: "error", message: res.error })
+                              else window.location.reload()
+                            })
+                          }}
+                          disabled={isPending}
+                          className={`text-xs font-semibold px-2 py-0.5 rounded-full border cursor-pointer focus:ring-1 focus:ring-primary/50 outline-none ${
+                            product.status === "Published"
+                              ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                              : product.status === "Draft"
+                              ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                              : "bg-muted text-muted-foreground border-border"
+                          }`}
+                        >
+                          <option value="Published">Published</option>
+                          <option value="Draft">Draft</option>
+                          <option value="Archived">Archived</option>
+                        </select>
+
+                        <button
+                          type="button"
+                          onClick={() => {
+                            startTransition(async () => {
+                              const res = await toggleProductFeatured(product._id, !product.isFeatured)
+                              if (res.error) setBanner({ type: "error", message: res.error })
+                              else window.location.reload()
+                            })
+                          }}
+                          disabled={isPending}
+                          className={`text-[10px] uppercase font-bold px-1.5 py-0.5 rounded border transition-colors ${
+                            product.isFeatured
+                              ? "text-primary bg-primary/10 border-primary/30"
+                              : "text-muted-foreground/50 border-border hover:text-foreground"
+                          }`}
+                          title="Click to toggle featured on home/store"
+                        >
+                          {product.isFeatured ? "★ Featured" : "☆ Feature"}
+                        </button>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right whitespace-nowrap">

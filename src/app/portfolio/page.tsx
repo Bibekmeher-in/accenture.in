@@ -3,7 +3,9 @@ import { Container } from "@/components/ui/Container"
 import { Section } from "@/components/ui/Section"
 import { ProjectCard } from "@/components/blocks/ProjectCard"
 import { CTASection } from "@/components/blocks/CTASection"
-import { getProjects } from "@/data/projects"
+import { getProjects } from "@/lib/projects-db"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Portfolio | TEKNIXX",
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 export default async function PortfolioPage() {
-  const projects = await getProjects()
+  const projects = await getProjects({ status: "Published" })
 
   return (
     <>
@@ -32,7 +34,7 @@ export default async function PortfolioPage() {
         <Container>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-12">
             {projects.map((project, index) => (
-              <div key={index} className="flex flex-col">
+              <div key={project._id || index} className="flex flex-col">
                 <div className="mb-4">
                   <span className="inline-block px-3 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary border border-primary/20">
                     {project.type}

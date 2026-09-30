@@ -4,7 +4,9 @@ import { CheckCircle2 } from "lucide-react"
 import { Container } from "@/components/ui/Container"
 import { Section } from "@/components/ui/Section"
 import { CTASection } from "@/components/blocks/CTASection"
-import { getServiceBySlug } from "@/data/services"
+import { getServiceBySlug } from "@/lib/services-db"
+
+export const dynamic = "force-dynamic"
 
 interface PageProps {
   params: Promise<{ slug: string }>
@@ -12,7 +14,7 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params
-  const service = getServiceBySlug(slug)
+  const service = await getServiceBySlug(slug)
 
   if (!service) {
     return {
@@ -28,7 +30,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function ServiceDetailPage({ params }: PageProps) {
   const { slug } = await params
-  const service = getServiceBySlug(slug)
+  const service = await getServiceBySlug(slug)
 
   if (!service) {
     notFound()

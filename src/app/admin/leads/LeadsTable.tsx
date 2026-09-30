@@ -1,8 +1,8 @@
 "use client"
 
 import * as React from "react"
-import { updateLeadStatus, updateLeadPriority, addLeadNote, getLeadActivities, deleteLead } from "./actions"
-import { Search, Filter, MessageSquare, Phone, Mail, FileText, ChevronRight, X, Send, Users, Trash2 } from "lucide-react"
+import { updateLeadStatus, updateLeadPriority, addLeadNote, getLeadActivities, deleteLead, createLead } from "./actions"
+import { Search, Filter, MessageSquare, Phone, Mail, FileText, ChevronRight, X, Send, Users, Trash2, Plus } from "lucide-react"
 const toast = {
   success: (msg: string) => { if (typeof window !== 'undefined') window.alert(msg) },
   error: (msg: string) => { if (typeof window !== 'undefined') window.alert("Error: " + msg) }
@@ -40,6 +40,17 @@ export function LeadsTable({ initialLeads }: { initialLeads: Lead[] }) {
   const [isPending, startTransition] = React.useTransition()
   const [search, setSearch] = React.useState("")
   const [statusFilter, setStatusFilter] = React.useState("all")
+  const [isCreateModalOpen, setIsCreateModalOpen] = React.useState(false)
+  const [newLead, setNewLead] = React.useState({
+    name: "",
+    email: "",
+    phone: "",
+    company: "",
+    service: "Custom Development",
+    message: "",
+    priority: "normal" as "low" | "normal" | "high" | "urgent",
+    status: "new" as "new" | "assigned" | "contacted" | "qualified" | "proposal" | "negotiation" | "won" | "lost" | "closed",
+  })
 
   const [selectedLead, setSelectedLead] = React.useState<Lead | null>(null)
 
@@ -81,7 +92,7 @@ export function LeadsTable({ initialLeads }: { initialLeads: Lead[] }) {
       )}
 
       {/* Filters Bar */}
-      <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between bg-muted/10">
+      <div className="p-4 border-b border-border flex flex-col sm:flex-row gap-4 justify-between bg-muted/10 items-center">
         <div className="relative w-full sm:w-72">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <input
@@ -93,24 +104,32 @@ export function LeadsTable({ initialLeads }: { initialLeads: Lead[] }) {
           />
         </div>
 
-        <div className="flex items-center gap-2 w-full sm:w-auto">
-          <Filter className="h-4 w-4 text-muted-foreground" />
-          <select
-            value={statusFilter}
-            onChange={e => setStatusFilter(e.target.value)}
-            className="w-full sm:w-auto bg-background border border-border text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
+        <div className="flex items-center gap-3 w-full sm:w-auto">
+          <div className="flex items-center gap-2">
+            <Filter className="h-4 w-4 text-muted-foreground" />
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value)}
+              className="w-full sm:w-auto bg-background border border-border text-sm rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary/50"
+            >
+              <option value="all">All Statuses</option>
+              <option value="new">New</option>
+              <option value="assigned">Assigned</option>
+              <option value="contacted">Contacted</option>
+              <option value="qualified">Qualified</option>
+              <option value="proposal">Proposal</option>
+              <option value="negotiation">Negotiation</option>
+              <option value="won">Won</option>
+              <option value="lost">Lost</option>
+              <option value="closed">Closed</option>
+            </select>
+          </div>
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-4 py-2 bg-primary text-primary-foreground text-sm font-bold rounded-lg hover:bg-primary/90 transition-all flex items-center gap-1.5 whitespace-nowrap"
           >
-            <option value="all">All Statuses</option>
-            <option value="new">New</option>
-            <option value="assigned">Assigned</option>
-            <option value="contacted">Contacted</option>
-            <option value="qualified">Qualified</option>
-            <option value="proposal">Proposal</option>
-            <option value="negotiation">Negotiation</option>
-            <option value="won">Won</option>
-            <option value="lost">Lost</option>
-            <option value="closed">Closed</option>
-          </select>
+            + Add Lead
+          </button>
         </div>
       </div>
 
@@ -171,6 +190,137 @@ export function LeadsTable({ initialLeads }: { initialLeads: Lead[] }) {
           </table>
         )}
       </div>
+
+      {/* Create Lead Modal */}
+      {isCreateModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-background/80 backdrop-blur-sm">
+          <div className="bg-card border border-border rounded-2xl max-w-lg w-full p-6 shadow-2xl space-y-4">
+            <div className="flex justify-between items-center pb-3 border-b border-border">
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Plus className="w-5 h-5 text-primary" /> Record Inbound Lead
+              </h2>
+              <button onClick={() => setIsCreateModalOpen(false)} className="p-1 hover:bg-muted rounded-full">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                startTransition(async () => {
+                  const res = await createLead(newLead)
+                  if (res.error) toast.error(res.error)
+                  else {
+                    toast.success("Lead created successfully")
+                    setIsCreateModalOpen(false)
+                    window.location.reload()
+                  }
+                })
+              }}
+              className="space-y-4"
+            >
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Full Name *</label>
+                  <input
+                    required
+                    value={newLead.name}
+                    onChange={(e) => setNewLead({ ...newLead, name: e.target.value })}
+                    placeholder="e.g. John Doe"
+                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Email Address *</label>
+                  <input
+                    type="email"
+                    required
+                    value={newLead.email}
+                    onChange={(e) => setNewLead({ ...newLead, email: e.target.value })}
+                    placeholder="john@example.com"
+                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Phone</label>
+                  <input
+                    value={newLead.phone}
+                    onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                    placeholder="+1 555-0199"
+                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Company</label>
+                  <input
+                    value={newLead.company}
+                    onChange={(e) => setNewLead({ ...newLead, company: e.target.value })}
+                    placeholder="Acme Corp"
+                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Service Interest</label>
+                  <input
+                    value={newLead.service}
+                    onChange={(e) => setNewLead({ ...newLead, service: e.target.value })}
+                    placeholder="e.g. Cloud Transformation"
+                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  />
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Priority</label>
+                  <select
+                    value={newLead.priority}
+                    onChange={(e) => setNewLead({ ...newLead, priority: e.target.value as "low" | "normal" | "high" | "urgent" })}
+                    className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  >
+                    <option value="low">Low</option>
+                    <option value="normal">Normal</option>
+                    <option value="high">High</option>
+                    <option value="urgent">Urgent</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="text-xs font-bold text-muted-foreground uppercase mb-1 block">Inquiry / Note *</label>
+                <textarea
+                  required
+                  rows={3}
+                  value={newLead.message}
+                  onChange={(e) => setNewLead({ ...newLead, message: e.target.value })}
+                  placeholder="Details of client requirements or offline conversation..."
+                  className="w-full px-3 py-2 text-sm bg-background border border-border rounded-lg focus:outline-none focus:ring-2 focus:ring-primary/50"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateModalOpen(false)}
+                  className="px-4 py-2 text-sm font-semibold text-muted-foreground hover:bg-muted rounded-lg transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="px-5 py-2 text-sm font-bold bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-all disabled:opacity-50"
+                >
+                  {isPending ? "Creating..." : "Create Lead"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Drawer Overlay */}
       {selectedLead && (

@@ -1,6 +1,6 @@
 import { Metadata } from "next"
 import Link from "next/link"
-import { Code, Layout, Server, ArrowRight } from "lucide-react"
+import { ArrowRight } from "lucide-react"
 
 import { Container } from "@/components/ui/Container"
 import { Section } from "@/components/ui/Section"
@@ -10,32 +10,16 @@ import { ServiceCard } from "@/components/blocks/ServiceCard"
 import { ProjectCard } from "@/components/blocks/ProjectCard"
 import { BlogCard } from "@/components/blocks/BlogCard"
 import { CTASection } from "@/components/blocks/CTASection"
+import { getServices } from "@/lib/services-db"
+import { getProjects } from "@/lib/projects-db"
+import { getBlogPosts } from "@/lib/blog-db"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "TEKNIXX | Professional IT Services & Solutions",
   description: "We help businesses design, build, improve, and maintain modern digital solutions.",
 }
-
-const services = [
-  {
-    title: "Web Development",
-    description: "Responsive, high-performance web applications built with modern frameworks and best practices.",
-    href: "/services/web-development/",
-    icon: Code,
-  },
-  {
-    title: "UI/UX Design",
-    description: "User-centric interface design focusing on clarity, accessibility, and professional aesthetics.",
-    href: "/services/ui-ux-design/",
-    icon: Layout,
-  },
-  {
-    title: "Software Solutions",
-    description: "Custom software development addressing specific business requirements and workflows.",
-    href: "/services/software-development/",
-    icon: Server,
-  },
-]
 
 const processSteps = [
   {
@@ -60,39 +44,17 @@ const processSteps = [
   },
 ]
 
-const recentProjects = [
-  {
-    title: "Global Supply Chain Dashboard",
-    description: "A real-time logistics visualization platform resolving supply chain bottlenecks for a Fortune 500 retailer.",
-    href: "/portfolio/",
-    tags: ["React", "Node.js", "WebSockets", "D3.js"],
-  },
-  {
-    title: "Fintech Mobile Application",
-    description: "A secure, cross-platform mobile app enabling seamless international transfers with multi-currency wallets.",
-    href: "/portfolio/",
-    tags: ["React Native", "TypeScript", "PostgreSQL", "AWS"],
-  },
-]
+export default async function HomePage() {
+  const [allServices, allProjects, allPosts] = await Promise.all([
+    getServices({ status: "Published" }),
+    getProjects({ status: "Published" }),
+    getBlogPosts({ status: "Published" }),
+  ])
 
-const recentPosts = [
-  {
-    title: "Modern Web Architecture Principles",
-    excerpt: "An overview of reliable, scalable architectural patterns for modern web applications.",
-    href: "/blog/",
-    date: new Date().toISOString(),
-    category: "Architecture",
-  },
-  {
-    title: "Improving Web Accessibility",
-    excerpt: "Practical approaches to ensuring digital products are usable by everyone.",
-    href: "/blog/",
-    date: new Date().toISOString(),
-    category: "Design",
-  },
-]
+  const displayServices = allServices.slice(0, 3)
+  const displayProjects = allProjects.slice(0, 2)
+  const displayPosts = allPosts.slice(0, 3)
 
-export default function HomePage() {
   return (
     <>
       {/* 1. Hero Section */}
@@ -131,8 +93,14 @@ export default function HomePage() {
             subtitle="Professional services tailored to your specific technical and business requirements."
           />
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {services.map((service, index) => (
-              <ServiceCard key={index} {...service} />
+            {displayServices.map((service, index) => (
+              <ServiceCard
+                key={service.slug || index}
+                title={service.title}
+                description={service.description}
+                href={`/services/${service.slug}/`}
+                icon={service.icon}
+              />
             ))}
           </div>
         </Container>
@@ -221,8 +189,15 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            {recentProjects.map((project, index) => (
-              <ProjectCard key={index} {...project} />
+            {displayProjects.map((project, index) => (
+              <ProjectCard
+                key={project._id || index}
+                title={project.title}
+                description={project.description}
+                href="/portfolio/"
+                tags={project.tags}
+                imageUrl={project.imageUrl}
+              />
             ))}
           </div>
         </Container>
@@ -245,8 +220,15 @@ export default function HomePage() {
             </Link>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {recentPosts.map((post, index) => (
-              <BlogCard key={index} {...post} />
+            {displayPosts.map((post, index) => (
+              <BlogCard
+                key={post.slug || index}
+                title={post.title}
+                excerpt={post.excerpt}
+                href={`/blog/${post.slug}/`}
+                date={post.date}
+                category={post.category}
+              />
             ))}
           </div>
         </Container>

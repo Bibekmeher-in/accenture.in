@@ -14,14 +14,21 @@ const BlogPostSchema = z.object({
   type: z.string().min(1).max(50),
   excerpt: z.string().min(1).max(500),
   content: z.string().min(1),
+  status: z.enum(["Published", "Draft", "Archived"]).default("Published"),
+  featured: z.boolean().default(false),
 })
 
-export async function createBlogPost(data: Record<string, string>) {
+export async function createBlogPost(data: Record<string, unknown>) {
   try {
     const session = await getSession()
     if (!session) return { error: "Unauthorized" }
 
-    const parsed = BlogPostSchema.safeParse(data)
+    const parsed = BlogPostSchema.safeParse({
+      ...data,
+      status: data.status || "Published",
+      featured: data.featured === true || data.featured === "true" || data.featured === "on",
+    })
+
     if (!parsed.success) {
       return { error: "Invalid blog post data. Ensure slug contains only lowercase letters, numbers, and hyphens." }
     }
@@ -59,12 +66,17 @@ export async function createBlogPost(data: Record<string, string>) {
   }
 }
 
-export async function updateBlogPost(id: string, data: Record<string, string>) {
+export async function updateBlogPost(id: string, data: Record<string, unknown>) {
   try {
     const session = await getSession()
     if (!session) return { error: "Unauthorized" }
 
-    const parsed = BlogPostSchema.safeParse(data)
+    const parsed = BlogPostSchema.safeParse({
+      ...data,
+      status: data.status || "Published",
+      featured: data.featured === true || data.featured === "true" || data.featured === "on",
+    })
+
     if (!parsed.success) {
       return { error: "Invalid blog post data. Ensure slug contains only lowercase letters, numbers, and hyphens." }
     }
@@ -112,10 +124,50 @@ export async function updateBlogPost(id: string, data: Record<string, string>) {
   }
 }
 
+export async function toggleBlogStatus(id: string, newStatus: "Published" | "Draft" | "Archived") {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    if (!ObjectId.isValid(id)) return { error: "Invalid post ID" }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("blog").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
+        }
+      }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "BLOG_STATUS_UPDATED",
+      entity: "blog",
+      entityId: id,
+      metadata: { newStatus }
+    })
+
+    revalidatePath("/blog")
+    revalidatePath("/admin/blog")
+    return { success: true }
+  } catch {
+    return { error: "Failed to update blog status" }
+  }
+}
+
 export async function deleteBlogPost(id: string) {
   try {
     const session = await getSession()
     if (!session) return { error: "Unauthorized" }
+
+    if (!ObjectId.isValid(id)) {
+      return { error: "Invalid post ID" }
+    }
 
     const client = await clientPromise
     const db = client.db("accenture")

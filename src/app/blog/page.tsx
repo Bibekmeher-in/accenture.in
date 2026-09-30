@@ -3,7 +3,9 @@ import { Container } from "@/components/ui/Container"
 import { Section } from "@/components/ui/Section"
 import { BlogCard } from "@/components/blocks/BlogCard"
 import { CTASection } from "@/components/blocks/CTASection"
-import { getBlogPosts } from "@/data/blog"
+import { getBlogPosts } from "@/lib/blog-db"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Blog & Insights | TEKNIXX",
@@ -11,7 +13,7 @@ export const metadata: Metadata = {
 }
 
 export default async function BlogPage() {
-  const blogPosts = await getBlogPosts()
+  const blogPosts = await getBlogPosts({ status: "Published" })
 
   return (
     <>
@@ -32,7 +34,7 @@ export default async function BlogPage() {
         <Container>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {blogPosts.map((post, index) => (
-              <div key={index} className="flex flex-col relative h-full">
+              <div key={post.slug || index} className="flex flex-col relative h-full">
                 <div className="absolute top-6 right-6 z-10">
                   <span className="inline-block px-2 py-1 text-[10px] font-bold uppercase tracking-wider rounded bg-background/80 backdrop-blur-sm border border-border text-muted-foreground">
                     {post.type}

@@ -1,8 +1,8 @@
 "use client"
 
 import React, { useState, useTransition } from "react"
-import { updateOrderStatus, recordManualOfflinePayment, recordPaymentRefund } from "../actions"
-import { AlertCircle, CheckCircle2, ShieldAlert, CreditCard, RefreshCw, Truck } from "lucide-react"
+import { updateOrderStatus, recordManualOfflinePayment, recordPaymentRefund, updateOrderTracking } from "../actions"
+import { AlertCircle, CheckCircle2, ShieldAlert, CreditCard, RefreshCw, Truck, ExternalLink } from "lucide-react"
 
 interface ManualPaymentInfo {
   channel?: string
@@ -19,6 +19,13 @@ interface RefundInfo {
   refundedAt?: string
 }
 
+interface TrackingInfo {
+  courierName?: string
+  trackingNumber?: string
+  trackingUrl?: string
+  updatedAt?: string
+}
+
 export function OrderControlPanel({
   orderId,
   currentStatus,
@@ -26,6 +33,7 @@ export function OrderControlPanel({
   paymentMethod,
   manualPaymentInfo,
   refundInfo,
+  trackingInfo,
 }: {
   orderId: string
   currentStatus: string
@@ -33,11 +41,20 @@ export function OrderControlPanel({
   paymentMethod?: string
   manualPaymentInfo?: ManualPaymentInfo
   refundInfo?: RefundInfo
+  trackingInfo?: TrackingInfo
 }) {
   // Fulfillment state
   const [orderStatus, setOrderStatus] = useState(currentStatus)
   const [statusMessage, setStatusMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
   const [isUpdatingStatus, startStatusTransition] = useTransition()
+
+  // Tracking state
+  const [showTrackingForm, setShowTrackingForm] = useState(false)
+  const [courierName, setCourierName] = useState(trackingInfo?.courierName || "BlueDart")
+  const [trackingNumber, setTrackingNumber] = useState(trackingInfo?.trackingNumber || "")
+  const [trackingUrl, setTrackingUrl] = useState(trackingInfo?.trackingUrl || "")
+  const [isUpdatingTracking, startTrackingTransition] = useTransition()
+  const [trackingMessage, setTrackingMessage] = useState<{ type: "success" | "error"; text: string } | null>(null)
 
   // Manual payment override state
   const [showManualPayModal, setShowManualPayModal] = useState(false)
@@ -184,6 +201,122 @@ export function OrderControlPanel({
             {isUpdatingStatus ? "Updating..." : "Update Fulfillment Status"}
           </button>
         </form>
+
+        {/* Tracking Details */}
+        <div className="pt-4 border-t border-border">
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-bold text-foreground">Courier / Consignment Tracking:</span>
+              {trackingInfo?.trackingNumber ? (
+                <span className="text-xs font-mono bg-muted px-2 py-0.5 rounded text-foreground font-semibold">
+                  {trackingInfo.courierName}: {trackingInfo.trackingNumber}
+                </span>
+              ) : (
+                <span className="text-xs text-muted-foreground italic">No tracking info assigned</span>
+              )}
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setShowTrackingForm(!showTrackingForm)}
+              className="text-xs font-bold text-primary hover:underline"
+            >
+              {showTrackingForm ? "Cancel" : trackingInfo?.trackingNumber ? "Edit Tracking" : "+ Add Tracking Info"}
+            </button>
+          </div>
+
+          {trackingInfo?.trackingUrl && (
+            <div className="mb-3">
+              <a
+                href={trackingInfo.trackingUrl}
+                target="_blank"
+                rel="noreferrer"
+                className="text-xs text-primary font-semibold hover:underline inline-flex items-center gap-1"
+              >
+                Track on {trackingInfo.courierName || "Courier"} Portal <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
+          )}
+
+          {trackingMessage && (
+            <div className={`p-2.5 rounded-lg text-xs mb-3 ${trackingMessage.type === "error" ? "bg-destructive/10 text-destructive" : "bg-green-500/10 text-green-600"}`}>
+              {trackingMessage.text}
+            </div>
+          )}
+
+          {showTrackingForm && (
+            <form
+              onSubmit={(e) => {
+                e.preventDefault()
+                setTrackingMessage(null)
+                startTrackingTransition(async () => {
+                  const res = await updateOrderTracking(orderId, {
+                    courierName,
+                    trackingNumber,
+                    trackingUrl,
+                  })
+                  if (res.error) {
+                    setTrackingMessage({ type: "error", text: res.error })
+                  } else {
+                    setTrackingMessage({ type: "success", text: "Tracking details saved." })
+                    setShowTrackingForm(false)
+                    setTimeout(() => window.location.reload(), 600)
+                  }
+                })
+              }}
+              className="p-3 bg-muted/30 border border-border rounded-xl space-y-3"
+            >
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-muted-foreground block mb-1">Courier Partner *</label>
+                  <input
+                    required
+                    value={courierName}
+                    onChange={(e) => setCourierName(e.target.value)}
+                    placeholder="e.g. BlueDart, Delhivery, DTDC"
+                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-muted-foreground block mb-1">AWB / Tracking Number *</label>
+                  <input
+                    required
+                    value={trackingNumber}
+                    onChange={(e) => setTrackingNumber(e.target.value)}
+                    placeholder="e.g. BD98721345"
+                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] font-bold uppercase text-muted-foreground block mb-1">Tracking Link URL</label>
+                  <input
+                    value={trackingUrl}
+                    onChange={(e) => setTrackingUrl(e.target.value)}
+                    placeholder="https://track.bluedart.com/..."
+                    className="w-full px-2.5 py-1.5 bg-background border border-border rounded-lg text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="flex justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setShowTrackingForm(false)}
+                  className="px-3 py-1 text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isUpdatingTracking}
+                  className="px-4 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-lg hover:bg-primary/90 disabled:opacity-50"
+                >
+                  {isUpdatingTracking ? "Saving..." : "Save Tracking"}
+                </button>
+              </div>
+            </form>
+          )}
+        </div>
       </div>
 
       {/* 2. Payment Status & Protected Audit Control */}

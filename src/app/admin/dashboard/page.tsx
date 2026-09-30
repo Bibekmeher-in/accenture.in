@@ -36,7 +36,6 @@ export default async function AdminDashboardPage() {
   const openLeadsCount = await db.collection("leads").countDocuments({
     status: { $in: ["new", "assigned", "contacted", "qualified", "proposal", "negotiation"] },
   })
-  const wonLeadsCount = await db.collection("leads").countDocuments({ status: "won" })
 
   // 2. Customer & Store Metrics
   const totalCustomers = await db.collection("customers").countDocuments()
@@ -49,18 +48,12 @@ export default async function AdminDashboardPage() {
   const totalOrders = await db.collection("orders").countDocuments()
   const pendingOrders = await db.collection("orders").countDocuments({ orderStatus: "Pending" })
   const paidOrders = await db.collection("orders").countDocuments({ paymentStatus: "Paid" })
-  const pendingPayments = await db.collection("orders").countDocuments({ paymentStatus: "Pending" })
 
   const revenueAgg = await db.collection("orders").aggregate([
     { $match: { paymentStatus: "Paid" } },
     { $group: { _id: null, total: { $sum: "$total" } } },
   ]).toArray()
   const paidRevenue = revenueAgg[0]?.total || 0
-
-  const totalOrderValueAgg = await db.collection("orders").aggregate([
-    { $group: { _id: null, total: { $sum: "$total" } } },
-  ]).toArray()
-  const totalOrderValue = totalOrderValueAgg[0]?.total || 0
 
   // 3. Products & Learning Metrics
   const totalProducts = await db.collection("products").countDocuments()

@@ -43,6 +43,12 @@ export default async function AdminCustomerDetailPage({
     .sort({ createdAt: -1 })
     .toArray()
 
+  const enrollments = await db
+    .collection("enrollments")
+    .find({ $or: [{ customerId }, { customerEmail: customer.email }] })
+    .sort({ enrolledAt: -1 })
+    .toArray()
+
   const totalSpent = orders.reduce((sum, o) => sum + (o.total || 0), 0)
 
   const joinDate = customer.createdAt
@@ -278,6 +284,50 @@ export default async function AdminCustomerDetailPage({
                         <td className="py-3 px-3 text-right">
                           <Link href="/admin/careers" className="text-xs font-bold text-primary hover:underline">
                             View in Careers
+                          </Link>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          )}
+
+          {/* Customer Academy Enrollments */}
+          {enrollments.length > 0 && (
+            <div className="bg-card border border-border rounded-2xl p-6 shadow-sm space-y-4">
+              <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+                <Globe className="w-5 h-5 text-primary" /> Academy Enrollments ({enrollments.length})
+              </h3>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[500px]">
+                  <thead>
+                    <tr className="border-b border-border text-xs font-semibold text-muted-foreground">
+                      <th className="py-2.5 px-3">Course</th>
+                      <th className="py-2.5 px-3">Enrolled Date</th>
+                      <th className="py-2.5 px-3">Status</th>
+                      <th className="py-2.5 px-3 text-right">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/60 text-xs">
+                    {enrollments.map((enr) => (
+                      <tr key={enr._id.toString()} className="hover:bg-muted/30 transition-colors">
+                        <td className="py-3 px-3 font-semibold text-foreground">{enr.courseTitle}</td>
+                        <td className="py-3 px-3 text-muted-foreground">
+                          {enr.enrolledAt ? new Date(enr.enrolledAt).toLocaleDateString("en-IN") : "—"}
+                        </td>
+                        <td className="py-3 px-3">
+                          <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                            enr.status === "Completed" ? "bg-green-500/10 text-green-600" :
+                            enr.status === "Active" ? "bg-blue-500/10 text-blue-600" : "bg-muted text-muted-foreground"
+                          }`}>
+                            {enr.status || "Active"}
+                          </span>
+                        </td>
+                        <td className="py-3 px-3 text-right">
+                          <Link href={`/learning/${enr.courseSlug}`} target="_blank" className="text-xs font-bold text-primary hover:underline">
+                            View Course
                           </Link>
                         </td>
                       </tr>

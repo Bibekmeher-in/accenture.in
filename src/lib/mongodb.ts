@@ -61,6 +61,27 @@ if (!process.env.MONGODB_URI) {
         await db.collection("careerApplications").createIndex({ customerId: 1 })
         await db.collection("careerApplications").createIndex({ createdAt: -1 })
         await db.collection("careerApplications").createIndex({ status: 1 })
+
+        // Store Products Indexes
+        await db.collection("products").createIndex({ slug: 1 }, { unique: true })
+        await db.collection("products").createIndex({ category: 1 })
+        await db.collection("products").createIndex({ status: 1 })
+
+        // Learning & Enrollments Indexes
+        await db.collection("learning").createIndex({ slug: 1 }, { unique: true })
+        await db.collection("learning").createIndex({ status: 1 })
+        await db.collection("enrollments").createIndex({ customerId: 1, courseId: 1 }, { unique: true })
+        await db.collection("enrollments").createIndex({ customerId: 1 })
+        await db.collection("enrollments").createIndex({ courseId: 1 })
+
+        // Content Blocks Indexes
+        await db.collection("contentBlocks").createIndex({ identifier: 1 }, { unique: true })
+        await db.collection("contentBlocks").createIndex({ placement: 1 })
+        await db.collection("contentBlocks").createIndex({ status: 1 })
+
+        // Portfolio Indexes
+        await db.collection("portfolio").createIndex({ createdAt: -1 })
+        await db.collection("portfolio").createIndex({ status: 1 })
       } catch (e) {
         console.error("Failed to initialize indexes:", e)
       }
@@ -110,6 +131,27 @@ if (!process.env.MONGODB_URI) {
       await db.collection("careerApplications").createIndex({ customerId: 1 })
       await db.collection("careerApplications").createIndex({ createdAt: -1 })
       await db.collection("careerApplications").createIndex({ status: 1 })
+
+      // Store Products Indexes
+      await db.collection("products").createIndex({ slug: 1 }, { unique: true })
+      await db.collection("products").createIndex({ category: 1 })
+      await db.collection("products").createIndex({ status: 1 })
+
+      // Learning & Enrollments Indexes
+      await db.collection("learning").createIndex({ slug: 1 }, { unique: true })
+      await db.collection("learning").createIndex({ status: 1 })
+      await db.collection("enrollments").createIndex({ customerId: 1, courseId: 1 }, { unique: true })
+      await db.collection("enrollments").createIndex({ customerId: 1 })
+      await db.collection("enrollments").createIndex({ courseId: 1 })
+
+      // Content Blocks Indexes
+      await db.collection("contentBlocks").createIndex({ identifier: 1 }, { unique: true })
+      await db.collection("contentBlocks").createIndex({ placement: 1 })
+      await db.collection("contentBlocks").createIndex({ status: 1 })
+
+      // Portfolio Indexes
+      await db.collection("portfolio").createIndex({ createdAt: -1 })
+      await db.collection("portfolio").createIndex({ status: 1 })
     } catch (e) {
       console.error("Failed to initialize indexes in prod:", e)
     }

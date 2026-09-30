@@ -3,14 +3,18 @@ import { Container } from "@/components/ui/Container"
 import { Section } from "@/components/ui/Section"
 import { ServiceCard } from "@/components/blocks/ServiceCard"
 import { CTASection } from "@/components/blocks/CTASection"
-import { services } from "@/data/services"
+import { getServices } from "@/lib/services-db"
+
+export const dynamic = "force-dynamic"
 
 export const metadata: Metadata = {
   title: "Services | TEKNIXX",
   description: "Comprehensive digital services ranging from web development to cloud infrastructure and strategic consulting.",
 }
 
-export default function ServicesPage() {
+export default async function ServicesPage() {
+  const serviceList = await getServices({ status: "Published" })
+
   return (
     <>
       <Section className="pt-24 pb-16 md:pt-32 md:pb-24 bg-background border-b border-border">
@@ -29,9 +33,9 @@ export default function ServicesPage() {
       <Section className="bg-muted/50">
         <Container>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
-            {services.map((service, index) => (
+            {serviceList.map((service, index) => (
               <ServiceCard
-                key={index}
+                key={service.slug || index}
                 title={service.title}
                 description={service.description}
                 href={`/services/${service.slug}/`}
@@ -48,6 +52,10 @@ export default function ServicesPage() {
         primaryAction={{
           label: "Contact Us",
           href: "/contact/",
+        }}
+        secondaryAction={{
+          label: "Explore Portfolio",
+          href: "/portfolio/",
         }}
       />
     </>

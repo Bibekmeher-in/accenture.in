@@ -19,7 +19,8 @@ import {
   Settings,
   ShoppingBag,
   UserCheck,
-  Briefcase
+  Briefcase,
+  Layers
 } from "lucide-react"
 
 const ALL_NAVIGATION = [
@@ -32,6 +33,7 @@ const ALL_NAVIGATION = [
   { name: "Services", href: "/admin/services", icon: LayoutTemplate, role: "admin" },
   { name: "Portfolio", href: "/admin/portfolio", icon: FolderGit2, role: "admin" },
   { name: "Blog", href: "/admin/blog", icon: FileText, role: "admin" },
+  { name: "Content Blocks", href: "/admin/blocks", icon: Layers, role: "admin" },
   { name: "Learning", href: "/admin/learning", icon: BookOpen, role: "admin" },
   { name: "Analytics", href: "/admin/analytics", icon: LineChart, role: "super_admin" },
   { name: "Cookies", href: "/admin/cookies", icon: Cookie, role: "super_admin" },

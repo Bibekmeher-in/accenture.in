@@ -193,6 +193,66 @@ export async function deleteProduct(id: string) {
   }
 }
 
+export async function toggleProductStatus(id: string, newStatus: "Draft" | "Published" | "Archived") {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("products").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { status: newStatus, updatedAt: new Date().toISOString() } }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "STORE_PRODUCT_STATUS_TOGGLED",
+      entity: "Store",
+      entityId: id,
+      metadata: { status: newStatus }
+    })
+
+    revalidatePath("/store")
+    revalidatePath("/admin/store")
+    return { success: true }
+  } catch (err) {
+    console.error("toggleProductStatus error:", err)
+    return { error: "Failed to update product status" }
+  }
+}
+
+export async function toggleProductFeatured(id: string, isFeatured: boolean) {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("products").updateOne(
+      { _id: new ObjectId(id) },
+      { $set: { isFeatured, updatedAt: new Date().toISOString() } }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "STORE_PRODUCT_FEATURED_TOGGLED",
+      entity: "Store",
+      entityId: id,
+      metadata: { isFeatured }
+    })
+
+    revalidatePath("/store")
+    revalidatePath("/admin/store")
+    return { success: true }
+  } catch (err) {
+    console.error("toggleProductFeatured error:", err)
+    return { error: "Failed to update product featured flag" }
+  }
+}
+
 export async function archiveProduct(id: string) {
   try {
     const session = await getSession()

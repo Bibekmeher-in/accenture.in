@@ -134,6 +134,7 @@ export default async function AdminOrderDetailPage({
             paymentMethod={order.paymentMethod}
             manualPaymentInfo={order.manualPaymentInfo}
             refundInfo={order.refundInfo}
+            trackingInfo={order.tracking}
           />
         </div>
 

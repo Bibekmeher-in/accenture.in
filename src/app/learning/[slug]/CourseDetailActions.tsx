@@ -21,18 +21,45 @@ export function CourseDetailActions({
       .then((data) => {
         if (data.authenticated && data.session) {
           setCustomerSession(data.session)
+          // Check enrollment
+          fetch(`/api/learning/enroll?courseSlug=${courseSlug}`)
+            .then((r) => r.json())
+            .then((res) => {
+              if (res.enrolled) {
+                setIsEnrolled(true)
+              }
+            })
+            .catch(() => {})
         } else {
           setCustomerSession(null)
         }
       })
       .catch(() => setCustomerSession(null))
-  }, [])
+  }, [courseSlug])
+
+  const enrollUser = async () => {
+    try {
+      const res = await fetch("/api/learning/enroll", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ courseSlug }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setIsEnrolled(true)
+      }
+    } catch (e) {
+      console.error("Enrollment failed:", e)
+    }
+  }
 
   const handleAction = () => {
     if (!customerSession) {
       setIsAuthModalOpen(true)
     } else {
-      setIsEnrolled(true)
+      if (!isEnrolled) {
+        enrollUser()
+      }
       const curriculumElem = document.getElementById("course-curriculum-section")
       if (curriculumElem) {
         curriculumElem.scrollIntoView({ behavior: "smooth" })

@@ -5,7 +5,7 @@ import { ArrowLeft, Calendar } from "lucide-react"
 import { Container } from "@/components/ui/Container"
 import { Section } from "@/components/ui/Section"
 import { CTASection } from "@/components/blocks/CTASection"
-import { getBlogPostBySlug } from "@/data/blog"
+import { getBlogPostBySlug } from "@/lib/blog-db"
 
 interface PageProps {
   params: Promise<{ slug: string }>

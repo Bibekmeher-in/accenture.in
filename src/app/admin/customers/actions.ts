@@ -116,3 +116,40 @@ export async function deleteCustomer(customerId: string) {
     return { error: "Failed to delete customer" }
   }
 }
+
+export async function updateCustomerNotes(customerId: string, notes: string) {
+  try {
+    const adminSession = await getSession()
+    if (!adminSession) return { error: "Unauthorized" }
+
+    if (!ObjectId.isValid(customerId)) {
+      return { error: "Invalid customer ID" }
+    }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("customers").updateOne(
+      { _id: new ObjectId(customerId) },
+      {
+        $set: {
+          adminNotes: notes.trim(),
+          updatedAt: new Date().toISOString(),
+        }
+      }
+    )
+
+    await logAudit({
+      actor: adminSession.username,
+      action: "CUSTOMER_NOTES_UPDATED",
+      entity: "Customer",
+      entityId: customerId,
+    })
+
+    revalidatePath(`/admin/customers/${customerId}`)
+    return { success: true }
+  } catch (err) {
+    console.error("updateCustomerNotes error:", err)
+    return { error: "Failed to update customer notes" }
+  }
+}

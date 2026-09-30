@@ -13,14 +13,23 @@ const PortfolioProjectSchema = z.object({
   type: z.string().min(1).max(50),
   tags: z.string().optional(),
   imageUrl: z.string().optional(),
+  status: z.enum(["Published", "Draft", "Archived"]).default("Published"),
+  orderRank: z.number().int().default(0),
+  featured: z.boolean().default(false),
 })
 
-export async function createPortfolioProject(data: Record<string, string>) {
+export async function createPortfolioProject(data: Record<string, unknown>) {
   try {
     const session = await getSession()
     if (!session) return { error: "Unauthorized" }
 
-    const parsed = PortfolioProjectSchema.safeParse(data)
+    const parsed = PortfolioProjectSchema.safeParse({
+      ...data,
+      featured: data.featured === true || data.featured === "true" || data.featured === "on",
+      orderRank: Number(data.orderRank) || 0,
+      status: data.status || "Published",
+    })
+
     if (!parsed.success) {
       return { error: "Invalid portfolio project data" }
     }
@@ -28,7 +37,6 @@ export async function createPortfolioProject(data: Record<string, string>) {
     const client = await clientPromise
     const db = client.db("accenture")
 
-    // Parse tags from comma-separated string
     const tags = parsed.data.tags ? parsed.data.tags.split(",").map((t: string) => t.trim()).filter(Boolean) : []
 
     const result = await db.collection("portfolio").insertOne({
@@ -37,7 +45,11 @@ export async function createPortfolioProject(data: Record<string, string>) {
       type: parsed.data.type,
       tags,
       imageUrl: parsed.data.imageUrl || "",
+      status: parsed.data.status,
+      orderRank: parsed.data.orderRank,
+      featured: parsed.data.featured,
       createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
     })
 
     await logAudit({
@@ -56,7 +68,7 @@ export async function createPortfolioProject(data: Record<string, string>) {
   }
 }
 
-export async function updatePortfolioProject(id: string, data: Record<string, string>) {
+export async function updatePortfolioProject(id: string, data: Record<string, unknown>) {
   try {
     const session = await getSession()
     if (!session) return { error: "Unauthorized" }
@@ -65,7 +77,13 @@ export async function updatePortfolioProject(id: string, data: Record<string, st
       return { error: "Invalid project ID" }
     }
 
-    const parsed = PortfolioProjectSchema.safeParse(data)
+    const parsed = PortfolioProjectSchema.safeParse({
+      ...data,
+      featured: data.featured === true || data.featured === "true" || data.featured === "on",
+      orderRank: Number(data.orderRank) || 0,
+      status: data.status || "Published",
+    })
+
     if (!parsed.success) {
       return { error: "Invalid portfolio project data" }
     }
@@ -84,6 +102,9 @@ export async function updatePortfolioProject(id: string, data: Record<string, st
           type: parsed.data.type,
           tags,
           imageUrl: parsed.data.imageUrl || "",
+          status: parsed.data.status,
+          orderRank: parsed.data.orderRank,
+          featured: parsed.data.featured,
           updatedAt: new Date().toISOString(),
         }
       }
@@ -103,6 +124,42 @@ export async function updatePortfolioProject(id: string, data: Record<string, st
   } catch (err) {
     console.error("updatePortfolioProject error:", err)
     return { error: "Failed to update project" }
+  }
+}
+
+export async function toggleProjectStatus(id: string, newStatus: "Published" | "Draft" | "Archived") {
+  try {
+    const session = await getSession()
+    if (!session) return { error: "Unauthorized" }
+
+    if (!ObjectId.isValid(id)) return { error: "Invalid project ID" }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("portfolio").updateOne(
+      { _id: new ObjectId(id) },
+      {
+        $set: {
+          status: newStatus,
+          updatedAt: new Date().toISOString(),
+        }
+      }
+    )
+
+    await logAudit({
+      actor: session.username,
+      action: "PORTFOLIO_STATUS_UPDATED",
+      entity: "Portfolio",
+      entityId: id,
+      metadata: { newStatus }
+    })
+
+    revalidatePath("/portfolio")
+    revalidatePath("/admin/portfolio")
+    return { success: true }
+  } catch {
+    return { error: "Failed to update project status" }
   }
 }
 

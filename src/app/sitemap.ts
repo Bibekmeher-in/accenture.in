@@ -1,6 +1,6 @@
 import { MetadataRoute } from 'next'
-import { getBlogPosts } from '@/data/blog'
-import { getProjects } from '@/data/projects'
+import { getBlogPosts } from '@/lib/blog-db'
+import { getProjects } from '@/lib/projects-db'
 import { services } from '@/data/services' // Assuming services is static as per earlier phases
 
 const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'

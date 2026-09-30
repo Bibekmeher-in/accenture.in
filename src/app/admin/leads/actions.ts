@@ -10,6 +10,59 @@ import { logAudit, logLeadActivity } from "@/lib/audit"
 const LeadStatusEnum = z.enum(["new", "assigned", "contacted", "qualified", "proposal", "negotiation", "won", "lost", "closed"])
 const LeadPriorityEnum = z.enum(["low", "normal", "high", "urgent"])
 
+const CreateLeadSchema = z.object({
+  name: z.string().min(1),
+  email: z.string().email(),
+  phone: z.string().optional().default(""),
+  company: z.string().optional().default(""),
+  service: z.string().optional().default("General Inquiry"),
+  message: z.string().min(1),
+  priority: LeadPriorityEnum.default("normal"),
+  status: LeadStatusEnum.default("new"),
+})
+
+export async function createLead(data: z.infer<typeof CreateLeadSchema>) {
+  try {
+    const session = await getSession()
+    if (!session || !["super_admin", "admin"].includes(session.role)) return { error: "Unauthorized" }
+
+    const parsed = CreateLeadSchema.safeParse(data)
+    if (!parsed.success) return { error: "Invalid lead data" }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    const leadDoc = {
+      ...parsed.data,
+      notes: [],
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
+
+    const res = await db.collection("leads").insertOne(leadDoc)
+
+    await logLeadActivity({
+      leadId: res.insertedId.toString(),
+      action: "LEAD_CREATED_MANUAL",
+      actor: session.username,
+      notes: "Created via Admin Panel",
+    })
+
+    await logAudit({
+      actor: session.username,
+      action: "LEAD_CREATED",
+      entity: "lead",
+      entityId: res.insertedId.toString(),
+      metadata: { name: parsed.data.name, email: parsed.data.email },
+    })
+
+    revalidatePath("/admin/leads")
+    return { success: true, leadId: res.insertedId.toString() }
+  } catch {
+    return { error: "Failed to create lead" }
+  }
+}
+
 export async function updateLeadStatus(leadId: string, status: string) {
   try {
     const session = await getSession()

@@ -170,3 +170,50 @@ export async function recordPaymentRefund(
     return { error: "Failed to record refund." }
   }
 }
+
+export async function updateOrderTracking(
+  orderId: string,
+  tracking: { courierName: string; trackingNumber: string; trackingUrl?: string }
+) {
+  try {
+    const adminSession = await getSession()
+    if (!adminSession) return { error: "Unauthorized" }
+
+    if (!tracking.courierName?.trim() || !tracking.trackingNumber?.trim()) {
+      return { error: "Courier name and tracking number are required." }
+    }
+
+    const client = await clientPromise
+    const db = client.db("accenture")
+
+    await db.collection("orders").updateOne(
+      { orderId },
+      {
+        $set: {
+          tracking: {
+            courierName: tracking.courierName.trim(),
+            trackingNumber: tracking.trackingNumber.trim(),
+            trackingUrl: tracking.trackingUrl?.trim() || "",
+            updatedAt: new Date().toISOString(),
+          },
+          updatedAt: new Date().toISOString(),
+        }
+      }
+    )
+
+    await logAudit({
+      actor: adminSession.username,
+      action: "ORDER_TRACKING_UPDATED",
+      entity: "Order",
+      entityId: orderId,
+      metadata: tracking,
+    })
+
+    revalidatePath("/admin/orders")
+    revalidatePath(`/admin/orders/${orderId}`)
+    return { success: true }
+  } catch (err) {
+    console.error("updateOrderTracking error:", err)
+    return { error: "Failed to update tracking information." }
+  }
+}
